@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 	"github.com/rickstaa/crypto-listings-sniper/utils/checkers"
 	"golang.org/x/time/rate"
@@ -18,12 +19,18 @@ import (
 // TODO: Create telegram link commmand.
 
 func main() {
-	telegramBotKey, chatID, binanceKey, binanceSecret := utils.GetEnvVars()
+	telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelID := utils.GetEnvVars()
 
 	// Load Telegram telegramBot.
 	telegramBot, err := telego.NewBot(telegramBotKey)
 	if err != nil {
 		log.Fatalf("Error loading Telegram telegramBot: %v", err)
+	}
+
+	// Load Discord bot.
+	discordBot, err := discordgo.New("Bot " + discordBotKey)
+	if err != nil {
+		log.Fatalf("Error loading Discord bot: %v", err)
 	}
 
 	// Log telegramBot and channel info.
@@ -60,7 +67,10 @@ func main() {
 	r := rate.Every(1 * time.Millisecond)
 	limiter := rate.NewLimiter(r, 1)
 	for {
+		tNow := time.Now()
 		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
-		checkers.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, chatID)
+		checkers.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, chatID, discordBot, discordChannelID)
+		log.Printf("Time elapsed: %v", time.Since(tNow))
+		log.Printf("Rate: %f", 1/time.Since(tNow).Seconds())
 	}
 }

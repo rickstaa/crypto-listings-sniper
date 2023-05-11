@@ -5,22 +5,22 @@ import (
 	"fmt"
 )
 
-// Returns a string containing a telegram message for a new SPOT trading pair.
+// Returns a string containing a message for a new SPOT trading pair.
 func newTradingPairMessage(symbol string, url string) string {
 	return fmt.Sprintf("⚖️ <u>Binance listed new SPOT trading pair (<a href='%s'>%s</a>)</u>", url, symbol)
 }
 
-// Return a string containing a telegram message for a removed SPOT trading pair.
+// Return a string containing a message for a removed SPOT trading pair.
 func removedTradingPairMessage(symbol string) string {
 	return fmt.Sprintf("🗑 <u>Binance removed SPOT trading pair (%s)</u>\n", symbol)
 }
 
-// Returns a string containing a telegram message for a new SPOT base asset.
+// Returns a string containing a message for a new SPOT base asset.
 func newBaseAssetMessage(symbol string, url string) string {
 	return fmt.Sprintf("💎 <u>Binance listed new SPOT asset (<a href='%s'>%s</a>)</u>", url, symbol)
 }
 
-// Returns a string containing a telegram message for a removed SPOT base asset.
+// Returns a string containing a message for a removed SPOT base asset.
 func removedBaseAssetMessage(symbol string) string {
 	return fmt.Sprintf("🗑 <u>Binance removed SPOT asset (%s)</u>\n", symbol)
 }

@@ -13,6 +13,7 @@ require (
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/bwmarrin/discordgo v0.27.1 // indirect
 	github.com/fasthttp/router v1.4.18 // indirect
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
@@ -26,4 +27,6 @@ require (
 	github.com/savsgio/gotils v0.0.0-20230208104028-c358bd845dee // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.47.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
+	golang.org/x/sys v0.6.0 // indirect
 )

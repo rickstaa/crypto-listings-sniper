@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/bwmarrin/discordgo"
+	"github.com/rickstaa/crypto-listings-sniper/utils/discordEmbeds"
 	"github.com/rickstaa/crypto-listings-sniper/utils/telegramMessages"
 
 	"github.com/adshao/go-binance/v2"
@@ -23,7 +25,7 @@ var (
 )
 
 // Retrieve environment variables.
-func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binanceSecret string) {
+func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binanceSecret string, discordBotKey string, discordChannelID string) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
@@ -31,12 +33,14 @@ func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binan
 	telegramBotKey = os.Getenv("TELEGRAM_BOT_TOKEN")
 	binanceKey = os.Getenv("BINANCE_API_Key")
 	binanceSecret = os.Getenv("BINANCE_API_SECRET_KEY")
+	discordBotKey = os.Getenv("DISCORD_BOT_TOKEN")
 	chatID, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
 	if err != nil {
 		log.Fatalf("Error parsing TELEGRAM_CHAT_ID: %v", err)
 	}
+	discordChannelID = os.Getenv("DISCORD_CHANNEL_ID")
 
-	return telegramBotKey, chatID, binanceKey, binanceSecret
+	return telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelID
 }
 
 // Check if a string is in a slice of strings.
@@ -96,6 +100,18 @@ func SendBaseAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed
 func SendTradingPairTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, symbol string, symbolInfo map[string]binance.Symbol) {
 	message := telegramMessages.TradingPairMessage(removed, createBinanceURL(symbol), symbolInfo[symbol].BaseAsset+"/"+symbolInfo[symbol].QuoteAsset)
 	SendTelegramMessage(telegramBot, chatID, message)
+}
+
+// Send Base asset Discord message to the specified channel.
+func SendBaseAssetDiscordMessage(discordBot *discordgo.Session, discordChannelID string, removed bool, symbol string) {
+	messageEmbed := discordEmbeds.BaseAssetEmbed(removed, symbol)
+	discordBot.ChannelMessageSendEmbed(discordChannelID, &messageEmbed)
+}
+
+// Send Trading pair Discord message to the specified channel.
+func SendTradingPairDiscordMessage(discordBot *discordgo.Session, discordChannelID string, removed bool, symbol string) {
+	messageEmbed := discordEmbeds.TradingPairEmbed(removed, symbol)
+	discordBot.ChannelMessageSendEmbed(discordChannelID, &messageEmbed)
 }
 
 // Retrieve the old assets and symbols from the data folder.
