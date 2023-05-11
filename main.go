@@ -5,7 +5,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/pkg/profile"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 	"github.com/rickstaa/crypto-listings-sniper/utils/checkers"
 	"golang.org/x/time/rate"
@@ -15,13 +14,10 @@ import (
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
-// TODO: Run in loop/
 // TODO: Create discord bot.
 // TODO: Create telegram link commmand.
-// TODO: Remove logging statements in checkers.go.
 
 func main() {
-	defer profile.Start(profile.ProfilePath(".")).Stop()
 	telegramBotKey, chatID, binanceKey, binanceSecret := utils.GetEnvVars()
 
 	// Load Telegram telegramBot.
