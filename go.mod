@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/adshao/go-binance/v2 v2.4.2
+	github.com/bwmarrin/discordgo v0.27.1
 	github.com/joho/godotenv v1.5.1
 	github.com/mymmrac/telego v0.24.0
 	github.com/pkg/profile v1.7.0
@@ -13,7 +14,6 @@ require (
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/bitly/go-simplejson v0.5.0 // indirect
-	github.com/bwmarrin/discordgo v0.27.1 // indirect
 	github.com/fasthttp/router v1.4.18 // indirect
 	github.com/felixge/fgprof v0.9.3 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect

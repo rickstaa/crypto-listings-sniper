@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	bn "github.com/rickstaa/crypto-listings-sniper/binance"
+	dc "github.com/rickstaa/crypto-listings-sniper/discord"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
-	"github.com/rickstaa/crypto-listings-sniper/utils/checkers"
 	"golang.org/x/time/rate"
 
 	"github.com/adshao/go-binance/v2"
@@ -15,17 +16,15 @@ import (
 	tu "github.com/mymmrac/telego/telegoutil"
 )
 
-// TODO: Create discord bot.
-// TODO: Create telegram link commmand.
-
 func main() {
-	telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelID := utils.GetEnvVars()
+	telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelIDs, discordAppID := utils.GetEnvVars()
 
 	// Load Telegram telegramBot.
 	telegramBot, err := telego.NewBot(telegramBotKey)
 	if err != nil {
 		log.Fatalf("Error loading Telegram telegramBot: %v", err)
 	}
+	defer telegramBot.Close()
 
 	// Load Discord bot.
 	discordBot, err := discordgo.New("Bot " + discordBotKey)
@@ -34,21 +33,26 @@ func main() {
 	}
 
 	// Log telegramBot and channel info.
-	botInfo, err := telegramBot.GetMe()
+	telegramBotInfo, err := telegramBot.GetMe()
 	if err != nil {
 		log.Fatalf("Error getting telegramBot info: %v", err)
 	}
-	chat, err := telegramBot.GetChat(&telego.GetChatParams{ChatID: tu.ID(chatID)})
+	telegramChat, err := telegramBot.GetChat(&telego.GetChatParams{ChatID: tu.ID(chatID)})
 	if err != nil {
-		log.Fatalf("Error getting chat info: %v", err)
+		log.Fatalf("Error getting telegramChat info: %v", err)
 	}
-	log.Printf("Authorized on account: %s", botInfo.Username)
-	log.Printf("Bot id: %d", botInfo.ID)
+	log.Printf("Authorized on account: %s", telegramBotInfo.Username)
+	log.Printf("Bot id: %d", telegramBotInfo.ID)
 	log.Printf("Chat id: %d", chatID)
-	log.Printf("Chat type: %s", chat.Type)
-	log.Printf("Chat title: %s", chat.Title)
-	log.Printf("Chat username: %s", chat.Username)
-	log.Printf("Chat description: %s", chat.Description)
+	log.Printf("Chat type: %s", telegramChat.Type)
+	log.Printf("Chat title: %s", telegramChat.Title)
+	log.Printf("Chat username: %s", telegramChat.Username)
+	log.Printf("Chat description: %s", telegramChat.Description)
+
+	// Register slash commands.
+	dc.SetupDiscordSlashCommands(discordBot, discordAppID, telegramChat.InviteLink)
+	discordBot.Open()
+	defer discordBot.Close()
 
 	// Load Binance binanceClient.
 	binanceClient := binance.NewClient(binanceKey, binanceSecret)
@@ -57,7 +61,7 @@ func main() {
 	// Retrieve old SPOT base assets and symbols and store them if they do not exist.
 	oldBaseAssetsList, oldSymbolsList := utils.RetrieveOldListings()
 	if len(oldBaseAssetsList) == 0 || len(oldSymbolsList) == 0 {
-		baseAssets, symbols, _ := utils.RetrieveBinanceSpotAssets(binanceClient)
+		baseAssets, symbols, _ := bn.RetrieveBinanceSpotAssets(binanceClient)
 
 		// Store symbol and base assets lists in JSON files.
 		utils.StoreOldListings(baseAssets, symbols)
@@ -67,10 +71,7 @@ func main() {
 	r := rate.Every(1 * time.Millisecond)
 	limiter := rate.NewLimiter(r, 1)
 	for {
-		tNow := time.Now()
 		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
-		checkers.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, chatID, discordBot, discordChannelID)
-		log.Printf("Time elapsed: %v", time.Since(tNow))
-		log.Printf("Rate: %f", 1/time.Since(tNow).Seconds())
+		bn.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, chatID, discordBot, discordChannelIDs)
 	}
 }

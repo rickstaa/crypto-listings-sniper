@@ -2,20 +2,13 @@
 package utils
 
 import (
-	"context"
 	"encoding/json"
 	"log"
 	"os"
 	"strconv"
+	"strings"
 
-	"github.com/bwmarrin/discordgo"
-	"github.com/rickstaa/crypto-listings-sniper/utils/discordEmbeds"
-	"github.com/rickstaa/crypto-listings-sniper/utils/telegramMessages"
-
-	"github.com/adshao/go-binance/v2"
 	"github.com/joho/godotenv"
-	"github.com/mymmrac/telego"
-	tu "github.com/mymmrac/telego/telegoutil"
 )
 
 // Global variables.
@@ -24,8 +17,19 @@ var (
 	ASSETS_FILE_PATH  = "data/assets_list.json"
 )
 
+// Delete empty strings from a slice of strings.
+func deleteEmpty(s []string) []string {
+	var r []string
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+	return r
+}
+
 // Retrieve environment variables.
-func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binanceSecret string, discordBotKey string, discordChannelID string) {
+func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binanceSecret string, discordBotKey string, discordChannelIDs []string, discordAppID string) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
@@ -38,9 +42,10 @@ func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binan
 	if err != nil {
 		log.Fatalf("Error parsing TELEGRAM_CHAT_ID: %v", err)
 	}
-	discordChannelID = os.Getenv("DISCORD_CHANNEL_ID")
+	discordChannelIDs = deleteEmpty(strings.Split(os.Getenv("DISCORD_CHANNEL_IDS"), ","))
+	discordAppID = os.Getenv("DISCORD_APP_ID")
 
-	return telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelID
+	return telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelIDs, discordAppID
 }
 
 // Check if a string is in a slice of strings.
@@ -78,40 +83,6 @@ func CompareLists(oldList []string, newList []string) (removed bool, difference 
 	}
 
 	return false, []string{}
-}
-
-// Send a Telegram message to the specified chat.
-func SendTelegramMessage(telegramBot *telego.Bot, chatID int64, message string) {
-	msg := tu.Message(tu.ID(chatID), message)
-	msg.ParseMode = telego.ModeHTML
-	_, err := telegramBot.SendMessage(msg)
-	if err != nil {
-		log.Printf("WARNING: Error sending message '%s' to channel '%d': %v", msg.Text, chatID, err)
-	}
-}
-
-// Send a base asset Telegram message to the specified chat.
-func SendBaseAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, symbol string) {
-	message := telegramMessages.BaseAssetMessage(removed, symbol, createBinanceURL(symbol)+"_USDT")
-	SendTelegramMessage(telegramBot, chatID, message)
-}
-
-// Send a trading pair Telegram message to the specified chat.
-func SendTradingPairTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, symbol string, symbolInfo map[string]binance.Symbol) {
-	message := telegramMessages.TradingPairMessage(removed, createBinanceURL(symbol), symbolInfo[symbol].BaseAsset+"/"+symbolInfo[symbol].QuoteAsset)
-	SendTelegramMessage(telegramBot, chatID, message)
-}
-
-// Send Base asset Discord message to the specified channel.
-func SendBaseAssetDiscordMessage(discordBot *discordgo.Session, discordChannelID string, removed bool, symbol string) {
-	messageEmbed := discordEmbeds.BaseAssetEmbed(removed, symbol)
-	discordBot.ChannelMessageSendEmbed(discordChannelID, &messageEmbed)
-}
-
-// Send Trading pair Discord message to the specified channel.
-func SendTradingPairDiscordMessage(discordBot *discordgo.Session, discordChannelID string, removed bool, symbol string) {
-	messageEmbed := discordEmbeds.TradingPairEmbed(removed, symbol)
-	discordBot.ChannelMessageSendEmbed(discordChannelID, &messageEmbed)
 }
 
 // Retrieve the old assets and symbols from the data folder.
@@ -171,38 +142,7 @@ func StoreOldListings(baseAssets []string, symbolList []string) {
 	}
 }
 
-// Retrieve SPOT assets and symbols from Binance.
-func RetrieveBinanceSpotAssets(binanceClient *binance.Client) (baseAssets []string, symbols []string, symbolInfo map[string]binance.Symbol) {
-	// Retrieve SPOT exchange info.
-	exchangeInfoService := binanceClient.NewExchangeInfoService()
-	exchangeInfoService = exchangeInfoService.Permissions("SPOT")
-	exchangeInfo, err := exchangeInfoService.Do(context.Background())
-
-	// Retrieve SPOT symbols.
-	exchangeSymbols := exchangeInfo.Symbols
-	if err != nil {
-		log.Fatalf("Error retrieving Binance 'SPOT' symbols: %v", err)
-	}
-	symbols = make([]string, len(exchangeSymbols))
-	symbolInfo = map[string]binance.Symbol{}
-	for i, s := range exchangeSymbols {
-		symbols[i] = s.Symbol
-		symbolInfo[s.Symbol] = s
-	}
-
-	// Retrieve SPOT base assets.
-	k := make(map[string]bool)
-	for _, s := range exchangeSymbols {
-		if _, value := k[s.BaseAsset]; !value {
-			k[s.BaseAsset] = true
-			baseAssets = append(baseAssets, s.BaseAsset)
-		}
-	}
-
-	return baseAssets, symbols, symbolInfo
-}
-
 // Create Binance URL for a asset.
-func createBinanceURL(assetName string) string {
+func CreateBinanceURL(assetName string) string {
 	return "https://www.binance.com/en/trade/" + assetName
 }
