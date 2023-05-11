@@ -9,11 +9,7 @@ import (
 
 // Check Binance for new SPOT listings or de-listings and post telegram message.
 func BinanceListingsCheck(oldBaseAssetsList *[]string, oldSymbolsList *[]string, binanceClient *binance.Client, telegramBot *telego.Bot, chatID int64) {
-	// Retrieve binance SPOT assets.
 	baseAssets, symbols, symbolInfo := utils.RetrieveBinanceSpotAssets(binanceClient)
-
-	// Store symbol and base assets lists in JSON files.
-	utils.StoreOldListings(baseAssets, symbols)
 
 	// Check for new base assets and post telegram message.
 	if len(*oldBaseAssetsList) != 0 { // Do not check if first run of the program.

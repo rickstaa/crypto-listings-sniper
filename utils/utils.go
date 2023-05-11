@@ -52,22 +52,28 @@ func Contains(s []string, str string) bool {
 
 // Retrieve added or removed assets.
 func CompareLists(oldList []string, newList []string) (removed bool, difference []string) {
-	removed = false
-	var compareBase = newList
-	var compareChild = oldList
 	if len(oldList) > len(newList) {
-		removed = true
-		compareBase = oldList
-		compareChild = newList
-	}
-
-	for _, s := range compareBase {
-		if !Contains(compareChild, s) {
-			difference = append(difference, s)
+		for _, s := range oldList {
+			if !Contains(newList, s) {
+				difference = append(difference, s)
+			}
 		}
+
+		return true, difference
+	} else if len(oldList) < len(newList) {
+
+		// If the length of the new list is greater than the old list.
+		for _, s := range newList {
+			removed = false
+			if !Contains(oldList, s) {
+				difference = append(difference, s)
+			}
+		}
+
+		return false, difference
 	}
 
-	return removed, difference
+	return false, []string{}
 }
 
 // Send a Telegram message to the specified chat.

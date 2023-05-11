@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/pkg/profile"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 	"github.com/rickstaa/crypto-listings-sniper/utils/checkers"
 	"golang.org/x/time/rate"
@@ -20,6 +21,7 @@ import (
 // TODO: Remove logging statements in checkers.go.
 
 func main() {
+	defer profile.Start(profile.ProfilePath(".")).Stop()
 	telegramBotKey, chatID, binanceKey, binanceSecret := utils.GetEnvVars()
 
 	// Load Telegram telegramBot.
@@ -49,17 +51,20 @@ func main() {
 	binanceClient := binance.NewClient(binanceKey, binanceSecret)
 	log.Printf("Binance API endpoint: %s", binanceClient.BaseURL)
 
-	// Retrieve old SPOT base assets and symbols.
+	// Retrieve old SPOT base assets and symbols and store them if they do not exist.
 	oldBaseAssetsList, oldSymbolsList := utils.RetrieveOldListings()
+	if len(oldBaseAssetsList) == 0 || len(oldSymbolsList) == 0 {
+		baseAssets, symbols, _ := utils.RetrieveBinanceSpotAssets(binanceClient)
+
+		// Store symbol and base assets lists in JSON files.
+		utils.StoreOldListings(baseAssets, symbols)
+	}
 
 	// Check binance for new SPOT listings or de-listings and post telegram message.
 	r := rate.Every(1 * time.Millisecond)
 	limiter := rate.NewLimiter(r, 1)
 	for {
-		tNow := time.Now()
-		limiter.Wait(context.Background())
+		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
 		checkers.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, chatID)
-		log.Printf("Time elapsed: %v", time.Since(tNow))
-		log.Printf("Rate: %v", 1/time.Since(tNow).Seconds())
 	}
 }
