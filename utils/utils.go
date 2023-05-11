@@ -29,23 +29,31 @@ func deleteEmpty(s []string) []string {
 }
 
 // Retrieve environment variables.
-func GetEnvVars() (telegramBotKey string, chatID int64, binanceKey string, binanceSecret string, discordBotKey string, discordChannelIDs []string, discordAppID string) {
+func GetEnvVars() (binanceKey string, binanceSecret string, telegramBotKey string, telegramChatID int64, enableTelegramMessage bool, discordBotKey string, discordChannelIDs []string, discordAppID string, enableDiscordMessages bool) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
-	telegramBotKey = os.Getenv("TELEGRAM_BOT_TOKEN")
 	binanceKey = os.Getenv("BINANCE_API_Key")
 	binanceSecret = os.Getenv("BINANCE_API_SECRET_KEY")
+	telegramBotKey = os.Getenv("TELEGRAM_BOT_TOKEN")
+	enableTelegramMessage, err = strconv.ParseBool(os.Getenv("ENABLE_TELEGRAM_MESSAGES"))
+	if err != nil {
+		log.Fatalf("Error parsing ENABLE_TELEGRAM_MESSAGES: %v", err)
+	}
 	discordBotKey = os.Getenv("DISCORD_BOT_TOKEN")
-	chatID, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
+	telegramChatID, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
 	if err != nil {
 		log.Fatalf("Error parsing TELEGRAM_CHAT_ID: %v", err)
 	}
 	discordChannelIDs = deleteEmpty(strings.Split(os.Getenv("DISCORD_CHANNEL_IDS"), ","))
 	discordAppID = os.Getenv("DISCORD_APP_ID")
+	enableDiscordMessages, err = strconv.ParseBool(os.Getenv("ENABLE_DISCORD_MESSAGES"))
+	if err != nil {
+		log.Fatalf("Error parsing ENABLE_DISCORD_MESSAGES: %v", err)
+	}
 
-	return telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelIDs, discordAppID
+	return binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages
 }
 
 // Check if a string is in a slice of strings.

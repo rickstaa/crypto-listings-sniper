@@ -46,7 +46,7 @@ func RetrieveBinanceSpotAssets(binanceClient *binance.Client) (baseAssets []stri
 }
 
 // Check Binance for new SPOT listings or de-listings and post telegram message.
-func BinanceListingsCheck(oldBaseAssetsList *[]string, oldSymbolsList *[]string, binanceClient *binance.Client, telegramBot *telego.Bot, chatID int64, discordBot *discordgo.Session, discordChannelIDs []string) {
+func BinanceListingsCheck(oldBaseAssetsList *[]string, oldSymbolsList *[]string, binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) {
 	baseAssets, symbols, symbolInfo := RetrieveBinanceSpotAssets(binanceClient)
 
 	// Check for new base assets and post telegram message.
@@ -54,10 +54,14 @@ func BinanceListingsCheck(oldBaseAssetsList *[]string, oldSymbolsList *[]string,
 		removed, newBasebaseAssets := utils.CompareLists(*oldBaseAssetsList, baseAssets)
 		for _, s := range newBasebaseAssets {
 			// Send telegram message.
-			go tg.SendBaseAssetTelegramMessage(telegramBot, chatID, removed, s)
+			if enableTelegramMessage {
+				go tg.SendBaseAssetTelegramMessage(telegramBot, telegramChatID, removed, s)
+			}
 
 			// Send discord message..
-			go dc.SendBaseAssetDiscordMessage(discordBot, discordChannelIDs, removed, s)
+			if enableDiscordMessages {
+				go dc.SendBaseAssetDiscordMessage(discordBot, discordChannelIDs, removed, s)
+			}
 		}
 
 		// Store updated base assets list in JSON files.
@@ -72,10 +76,14 @@ func BinanceListingsCheck(oldBaseAssetsList *[]string, oldSymbolsList *[]string,
 		removed, newSymbols := utils.CompareLists(*oldSymbolsList, symbols)
 		for _, s := range newSymbols {
 			// Send telegram message.
-			go tg.SendTradingPairTelegramMessage(telegramBot, chatID, removed, s, symbolInfo)
+			if enableTelegramMessage {
+				go tg.SendTradingPairTelegramMessage(telegramBot, telegramChatID, removed, s, symbolInfo)
+			}
 
 			// Send discord message.
-			go dc.SendTradingPairDiscordMessage(discordBot, discordChannelIDs, removed, s)
+			if enableDiscordMessages {
+				go dc.SendTradingPairDiscordMessage(discordBot, discordChannelIDs, removed, s, symbolInfo)
+			}
 		}
 
 		// Store updated symbol list in JSON files.

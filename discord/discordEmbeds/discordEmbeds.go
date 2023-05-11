@@ -7,11 +7,11 @@ import (
 	"strconv"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/rickstaa/crypto-listings-sniper/utils"
 )
 
 var (
 	DEFAULT_EMBED = discordgo.MessageEmbed{
-		URL:   "https://www.binance.com/en/support/announcement/360050980292",
 		Color: HexColorToInt("F3BA2F"),
 		Image: &discordgo.MessageEmbedImage{URL: "https://t4.ftcdn.net/jpg/04/46/35/17/360_F_446351747_WHAenLH7njEwEAuDf3aJ7Q3WFX9FM18s.jpg"},
 	}
@@ -27,9 +27,10 @@ func HexColorToInt(color string) int {
 }
 
 // Returns a string containing a message for a new SPOT trading pair.
-func newTradingPairMessage(symbol string) discordgo.MessageEmbed {
+func newTradingPairMessage(symbol string, slug string) discordgo.MessageEmbed {
 	embed := DEFAULT_EMBED
-	embed.Title = fmt.Sprintf("⚖️ Binance listed new SPOT trading pair (%s)", symbol)
+	embed.Title = fmt.Sprintf("⚖️ Binance listed new SPOT trading pair (%s)", slug)
+	embed.URL = utils.CreateBinanceURL(symbol)
 	return embed
 }
 
@@ -45,6 +46,7 @@ func removedTradingPairMessage(symbol string) discordgo.MessageEmbed {
 func newBaseAssetMessage(symbol string) discordgo.MessageEmbed {
 	embed := DEFAULT_EMBED
 	embed.Title = fmt.Sprintf("💎 Binance listed new SPOT asset (%s)", symbol)
+	embed.URL = utils.CreateBinanceURL(symbol) + "_USDT"
 	return embed
 }
 
@@ -67,11 +69,11 @@ func BaseAssetEmbed(removed bool, symbol string) discordgo.MessageEmbed {
 }
 
 // Returns a string containing a Discord message for a new or removed SPOT trading pair.
-func TradingPairEmbed(removed bool, symbol string) discordgo.MessageEmbed {
+func TradingPairEmbed(removed bool, symbol string, slug string) discordgo.MessageEmbed {
 	switch removed {
 	case true:
 		return removedTradingPairMessage(symbol)
 	default:
-		return newTradingPairMessage(symbol)
+		return newTradingPairMessage(symbol, slug)
 	}
 }

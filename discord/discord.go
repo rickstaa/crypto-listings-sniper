@@ -4,6 +4,7 @@ package discord
 import (
 	"log"
 
+	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rickstaa/crypto-listings-sniper/discord/discordEmbeds"
 )
@@ -65,22 +66,9 @@ func SendBaseAssetDiscordMessage(discordBot *discordgo.Session, discordChannelID
 }
 
 // Send Trading pair Discord message to the specified channel.
-func SendTradingPairDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, symbol string) {
-	messageEmbed := discordEmbeds.TradingPairEmbed(removed, symbol)
+func SendTradingPairDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, symbol string, symbolInfo map[string]binance.Symbol) {
+	messageEmbed := discordEmbeds.TradingPairEmbed(removed, symbol, symbolInfo[symbol].BaseAsset+"/"+symbolInfo[symbol].QuoteAsset)
 	for _, channelID := range discordChannelIDs {
 		go discordBot.ChannelMessageSendEmbed(channelID, &messageEmbed)
 	}
-}
-
-// Handle discord '/invite' slash command.
-func HandleDiscordInviteCommand(s *discordgo.Session, i *discordgo.InteractionCreate) {
-	// Create the interaction response.
-	response := discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: "https://discord.com/api/oauth2/authorize?client_id=889267457513744680&permissions=0&scope=bot%20applications.commands",
-		},
-	}
-	// Send the interaction response.
-	s.InteractionRespond(i.Interaction, &response)
 }

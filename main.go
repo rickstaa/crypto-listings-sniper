@@ -17,7 +17,7 @@ import (
 )
 
 func main() {
-	telegramBotKey, chatID, binanceKey, binanceSecret, discordBotKey, discordChannelIDs, discordAppID := utils.GetEnvVars()
+	binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages := utils.GetEnvVars()
 
 	// Load Telegram telegramBot.
 	telegramBot, err := telego.NewBot(telegramBotKey)
@@ -37,13 +37,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error getting telegramBot info: %v", err)
 	}
-	telegramChat, err := telegramBot.GetChat(&telego.GetChatParams{ChatID: tu.ID(chatID)})
+	telegramChat, err := telegramBot.GetChat(&telego.GetChatParams{ChatID: tu.ID(telegramChatID)})
 	if err != nil {
 		log.Fatalf("Error getting telegramChat info: %v", err)
 	}
 	log.Printf("Authorized on account: %s", telegramBotInfo.Username)
 	log.Printf("Bot id: %d", telegramBotInfo.ID)
-	log.Printf("Chat id: %d", chatID)
+	log.Printf("Chat id: %d", telegramChatID)
 	log.Printf("Chat type: %s", telegramChat.Type)
 	log.Printf("Chat title: %s", telegramChat.Title)
 	log.Printf("Chat username: %s", telegramChat.Username)
@@ -72,6 +72,6 @@ func main() {
 	limiter := rate.NewLimiter(r, 1)
 	for {
 		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
-		bn.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, chatID, discordBot, discordChannelIDs)
+		bn.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
 	}
 }
