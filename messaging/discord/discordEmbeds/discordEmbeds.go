@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 )
@@ -28,9 +29,11 @@ var (
 )
 
 // Returns a string containing a message for a new asset.
-func newAssetMessage(asset string) discordgo.MessageEmbed {
+func newAssetMessage(asset string, symbolInfo binance.Symbol) discordgo.MessageEmbed {
 	embed := ASSET_EMBED
 	embed.Title = fmt.Sprintf("💎 Binance listed new asset (%s)", asset)
+	embed.Description = fmt.Sprintf("• **Base Asset:** %s\n", symbolInfo.BaseAsset) +
+		fmt.Sprintf("• **Quota Asset:** %s\n", symbolInfo.QuoteAsset)
 	embed.URL = utils.CreateBinanceURL(asset)
 	return embed
 }
@@ -44,11 +47,11 @@ func removedAssetMessage(asset string) discordgo.MessageEmbed {
 }
 
 // Returns a string containing a Discord message for a new or removed asset.
-func AssetEmbed(removed bool, asset string) discordgo.MessageEmbed {
+func AssetEmbed(removed bool, asset string, symbolInfo binance.Symbol) discordgo.MessageEmbed {
 	switch removed {
 	case true:
 		return removedAssetMessage(asset)
 	default:
-		return newAssetMessage(asset)
+		return newAssetMessage(asset, symbolInfo)
 	}
 }

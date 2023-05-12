@@ -6,9 +6,10 @@ import (
 
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 
+	"github.com/adshao/go-binance/v2"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
-	"github.com/rickstaa/crypto-listings-sniper/telegram/telegramMessages"
+	"github.com/rickstaa/crypto-listings-sniper/messaging/telegram/telegramMessages"
 )
 
 // Send a Telegram message to the specified chat.
@@ -22,7 +23,7 @@ func SendTelegramMessage(telegramBot *telego.Bot, chatID int64, message string) 
 }
 
 // Send a asset Telegram message to the specified chat.
-func SendAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, asset string) {
-	message := telegramMessages.AssetMessage(removed, asset, utils.CreateBinanceURL(asset))
+func SendAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, asset string, symbolInfo binance.Symbol) {
+	message := telegramMessages.AssetMessage(removed, asset, utils.CreateBinanceURL(asset), symbolInfo)
 	SendTelegramMessage(telegramBot, chatID, message)
 }

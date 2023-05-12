@@ -4,8 +4,9 @@ package discord
 import (
 	"log"
 
+	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
-	"github.com/rickstaa/crypto-listings-sniper/discord/discordEmbeds"
+	"github.com/rickstaa/crypto-listings-sniper/messaging/discord/discordEmbeds"
 )
 
 // Setup discord slash commands.
@@ -66,8 +67,8 @@ func sendDiscordEmbed(discordBot *discordgo.Session, discordChannelID string, em
 }
 
 // Send Trading pair Discord message to the specified channel.
-func SendAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, asset string) {
-	messageEmbed := discordEmbeds.AssetEmbed(removed, asset)
+func SendAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, asset string, symbolInfo binance.Symbol) {
+	messageEmbed := discordEmbeds.AssetEmbed(removed, asset, symbolInfo)
 	for _, channelID := range discordChannelIDs {
 		go sendDiscordEmbed(discordBot, channelID, &messageEmbed)
 	}

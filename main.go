@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	bn "github.com/rickstaa/crypto-listings-sniper/binance"
-	dc "github.com/rickstaa/crypto-listings-sniper/discord"
+	bn "github.com/rickstaa/crypto-listings-sniper/exchanges/binance"
+	"github.com/rickstaa/crypto-listings-sniper/messaging"
+	dc "github.com/rickstaa/crypto-listings-sniper/messaging/discord"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 	"golang.org/x/time/rate"
 
@@ -55,6 +56,7 @@ func main() {
 
 	// Load Binance client.
 	binanceClient := binance.NewClient(binanceKey, binanceSecret)
+	binanceClient.SetApiEndpoint("https://api4.binance.com")
 	log.Printf("Binance API endpoint: %s", binanceClient.BaseURL)
 
 	// Retrieve old assets and store them if they do not exist.
@@ -70,6 +72,13 @@ func main() {
 	limiter := rate.NewLimiter(r, 1)
 	for {
 		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
-		bn.BinanceListingsCheck(&oldAssets, binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
+
+		// retrieve changed assets.
+		removed, changedAssets := bn.BinanceListingsCheck(&oldAssets, binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
+
+		// Post messages.
+		for _, asset := range changedAssets {
+			go messaging.SendAssetMessage(binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages, removed, asset)
+		}
 	}
 }
