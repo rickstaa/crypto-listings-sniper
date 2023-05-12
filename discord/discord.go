@@ -27,6 +27,7 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 				&discordgo.InteractionResponse{
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
+						Flags:   discordgo.MessageFlagsEphemeral,
 						Content: telegramInviteLink,
 					},
 				},
