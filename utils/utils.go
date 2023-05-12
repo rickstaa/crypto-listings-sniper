@@ -13,8 +13,7 @@ import (
 
 // Global variables.
 var (
-	SYMBOLS_FILE_PATH = "data/symbol_list.json"
-	ASSETS_FILE_PATH  = "data/assets_list.json"
+	ASSETS_FILE_PATH = "data/assets_list.json"
 )
 
 // Delete empty strings from a slice of strings.
@@ -34,6 +33,7 @@ func GetEnvVars() (binanceKey string, binanceSecret string, telegramBotKey strin
 	if err != nil {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
+
 	binanceKey = os.Getenv("BINANCE_API_Key")
 	binanceSecret = os.Getenv("BINANCE_API_SECRET_KEY")
 	telegramBotKey = os.Getenv("TELEGRAM_BOT_TOKEN")
@@ -67,7 +67,7 @@ func Contains(s []string, str string) bool {
 	return false
 }
 
-// Retrieve added or removed assets.
+// Compare two lists of strings and return the difference.
 func CompareLists(oldList []string, newList []string) (removed bool, difference []string) {
 	if len(oldList) > len(newList) {
 		for _, s := range oldList {
@@ -78,7 +78,6 @@ func CompareLists(oldList []string, newList []string) (removed bool, difference 
 
 		return true, difference
 	} else if len(oldList) < len(newList) {
-
 		// If the length of the new list is greater than the old list.
 		for _, s := range newList {
 			removed = false
@@ -93,59 +92,34 @@ func CompareLists(oldList []string, newList []string) (removed bool, difference 
 	return false, []string{}
 }
 
-// Retrieve the old assets and symbols from the data folder.
-func RetrieveOldListings() (oldBaseAssetsList []string, oldSymbolList []string) {
-	oldBaseAssetsListJson, err := os.ReadFile(ASSETS_FILE_PATH)
+// Retrieve the old assets from the data folder.
+func RetrieveOldListings() (oldAssets []string) {
+	oldAssetsJson, err := os.ReadFile(ASSETS_FILE_PATH)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			log.Fatalf("Error reading old 'SPOT' base assets from file '%s': %v", ASSETS_FILE_PATH, err)
+			log.Fatalf("Error reading old assets from file '%s': %v", ASSETS_FILE_PATH, err)
 		}
 	} else {
-		err = json.Unmarshal(oldBaseAssetsListJson, &oldBaseAssetsList)
+		err = json.Unmarshal(oldAssetsJson, &oldAssets)
 		if err != nil {
-			log.Fatalf("Error unmarshalling old base assets: %v", err)
+			log.Fatalf("Error unmarshalling old assets: %v", err)
 		}
-		log.Printf("Number of old 'SPOT' base assets: %d", len(oldBaseAssetsList))
-	}
-	oldSymbolListJson, err := os.ReadFile(SYMBOLS_FILE_PATH)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			log.Fatalf("Error reading old 'SPOT' symbols from file '%s': %v", SYMBOLS_FILE_PATH, err)
-		}
-	} else {
-		err = json.Unmarshal(oldSymbolListJson, &oldSymbolList)
-		if err != nil {
-			log.Fatalf("Error unmarshalling old symbols: %v", err)
-		}
-		log.Printf("Number of old 'SPOT' symbols: %d", len(oldSymbolList))
+		log.Printf("Number of old assets: %d", len(oldAssets))
 	}
 
-	return oldBaseAssetsList, oldSymbolList
+	return oldAssets
 }
 
-// Store the old assets and symbols from the data folder.
-func StoreOldListings(baseAssets []string, symbolList []string) {
-	// Store SPOT base assets.
-	if len(baseAssets) != 0 {
-		baseAssetsListJson, err := json.Marshal(baseAssets)
+// Store the old assets in the data folder.
+func StoreOldListings(assets []string) {
+	if len(assets) != 0 {
+		assetsJson, err := json.Marshal(assets)
 		if err != nil {
-			log.Fatalf("Error marshalling base assets list: %v", err)
+			log.Fatalf("Error marshalling assets list: %v", err)
 		}
-		err = os.WriteFile(ASSETS_FILE_PATH, baseAssetsListJson, 0644)
+		err = os.WriteFile(ASSETS_FILE_PATH, assetsJson, 0644)
 		if err != nil {
-			log.Fatalf("Error writing base assets list to file '%s': %v", ASSETS_FILE_PATH, err)
-		}
-	}
-
-	// Store SPOT symbols.
-	if len(symbolList) != 0 {
-		symbolListJson, err := json.Marshal(symbolList)
-		if err != nil {
-			log.Fatalf("Error marshalling symbol list: %v", err)
-		}
-		err = os.WriteFile(SYMBOLS_FILE_PATH, symbolListJson, 0644)
-		if err != nil {
-			log.Fatalf("Error writing symbol list to file '%s': %v", SYMBOLS_FILE_PATH, err)
+			log.Fatalf("Error writing assets list to file '%s': %v", ASSETS_FILE_PATH, err)
 		}
 	}
 }

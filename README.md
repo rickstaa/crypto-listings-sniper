@@ -1,11 +1,11 @@
 # Crypto Listing Sniper
 
-A bot that watches for new coin/token listings on Binance and posts a telegram/Discord message.
+A bot that watches for new coin/token listings on Binance and posts a Telegram/Discord message.
 
 ## Features
 
-- Posts Discord/telegram messages when a new Binance listing is found.
-- Allows users to request the telegram link using the Discord `/telegram-invite` slash command.
+- Posts Discord/Telegram messages when a new Binance listing is found.
+- Allows users to request the Telegram link using the Discord `/telegram-invite` slash command.
 
 ## How to use
 

@@ -4,7 +4,6 @@ package discord
 import (
 	"log"
 
-	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rickstaa/crypto-listings-sniper/discord/discordEmbeds"
 )
@@ -55,21 +54,21 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 			}
 		}
 	})
+	discordBot.Open()
 }
 
-// Send Base asset Discord message to the specified channel.
-func SendBaseAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, symbol string) {
-	messageEmbed := discordEmbeds.BaseAssetEmbed(removed, symbol)
-
-	for _, channelID := range discordChannelIDs {
-		go discordBot.ChannelMessageSendEmbed(channelID, &messageEmbed)
+// Send a Discord embed message to the specified channel.
+func sendDiscordEmbed(discordBot *discordgo.Session, discordChannelID string, embed *discordgo.MessageEmbed) {
+	_, err := discordBot.ChannelMessageSendEmbed(discordChannelID, embed)
+	if err != nil {
+		log.Fatalf("Error sending discord embed message: %v", err)
 	}
 }
 
 // Send Trading pair Discord message to the specified channel.
-func SendTradingPairDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, symbol string, symbolInfo map[string]binance.Symbol) {
-	messageEmbed := discordEmbeds.TradingPairEmbed(removed, symbol, symbolInfo[symbol].BaseAsset+"/"+symbolInfo[symbol].QuoteAsset)
+func SendAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, asset string) {
+	messageEmbed := discordEmbeds.AssetEmbed(removed, asset)
 	for _, channelID := range discordChannelIDs {
-		go discordBot.ChannelMessageSendEmbed(channelID, &messageEmbed)
+		go sendDiscordEmbed(discordBot, channelID, &messageEmbed)
 	}
 }

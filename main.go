@@ -19,7 +19,7 @@ import (
 func main() {
 	binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages := utils.GetEnvVars()
 
-	// Load Telegram telegramBot.
+	// Load Telegram bot.
 	telegramBot, err := telego.NewBot(telegramBotKey)
 	if err != nil {
 		log.Fatalf("Error loading Telegram telegramBot: %v", err)
@@ -31,8 +31,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading Discord bot: %v", err)
 	}
+	defer discordBot.Close()
 
-	// Log telegramBot and channel info.
+	// Log Telegram bot and channel info.
 	telegramBotInfo, err := telegramBot.GetMe()
 	if err != nil {
 		log.Fatalf("Error getting telegramBot info: %v", err)
@@ -51,27 +52,24 @@ func main() {
 
 	// Register slash commands.
 	dc.SetupDiscordSlashCommands(discordBot, discordAppID, telegramChat.InviteLink)
-	discordBot.Open()
-	defer discordBot.Close()
 
-	// Load Binance binanceClient.
+	// Load Binance client.
 	binanceClient := binance.NewClient(binanceKey, binanceSecret)
 	log.Printf("Binance API endpoint: %s", binanceClient.BaseURL)
 
-	// Retrieve old SPOT base assets and symbols and store them if they do not exist.
-	oldBaseAssetsList, oldSymbolsList := utils.RetrieveOldListings()
-	if len(oldBaseAssetsList) == 0 || len(oldSymbolsList) == 0 {
-		baseAssets, symbols, _ := bn.RetrieveBinanceSpotAssets(binanceClient)
+	// Retrieve old assets and store them if they do not exist.
+	oldAssets := utils.RetrieveOldListings()
+	if len(oldAssets) == 0 {
+		assets := bn.RetrieveBinanceAssets(binanceClient)
 
-		// Store symbol and base assets lists in JSON files.
-		utils.StoreOldListings(baseAssets, symbols)
+		utils.StoreOldListings(assets)
 	}
 
-	// Check binance for new SPOT listings or de-listings and post telegram message.
+	// Check binance for new listings or de-listings and post Telegram/Discord message.
 	r := rate.Every(1 * time.Millisecond)
 	limiter := rate.NewLimiter(r, 1)
 	for {
 		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
-		bn.BinanceListingsCheck(&oldBaseAssetsList, &oldSymbolsList, binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
+		bn.BinanceListingsCheck(&oldAssets, binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
 	}
 }

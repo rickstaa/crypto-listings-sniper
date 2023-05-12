@@ -14,82 +14,44 @@ import (
 	"github.com/mymmrac/telego"
 )
 
-// Retrieve SPOT assets and symbols from Binance.
-func RetrieveBinanceSpotAssets(binanceClient *binance.Client) (baseAssets []string, symbols []string, symbolInfo map[string]binance.Symbol) {
-	// Retrieve SPOT exchange info.
-	exchangeInfoService := binanceClient.NewExchangeInfoService()
-	exchangeInfoService = exchangeInfoService.Permissions("SPOT")
-	exchangeInfo, err := exchangeInfoService.Do(context.Background())
-
-	// Retrieve SPOT symbols.
-	exchangeSymbols := exchangeInfo.Symbols
+// Retrieve assets from Binance.
+func RetrieveBinanceAssets(binanceClient *binance.Client) (assets []string) {
+	priceService := binanceClient.NewListPricesService()
+	listingPrices, err := priceService.Do(context.Background())
+	assets = make([]string, len(listingPrices))
 	if err != nil {
-		log.Fatalf("Error retrieving Binance 'SPOT' symbols: %v", err)
+		log.Fatalf("Error retrieving Binance listing prices: %v", err)
 	}
-	symbols = make([]string, len(exchangeSymbols))
-	symbolInfo = map[string]binance.Symbol{}
-	for i, s := range exchangeSymbols {
-		symbols[i] = s.Symbol
-		symbolInfo[s.Symbol] = s
+	for i, s := range listingPrices {
+		assets[i] = s.Symbol
 	}
 
-	// Retrieve SPOT base assets.
-	k := make(map[string]bool)
-	for _, s := range exchangeSymbols {
-		if _, value := k[s.BaseAsset]; !value {
-			k[s.BaseAsset] = true
-			baseAssets = append(baseAssets, s.BaseAsset)
-		}
-	}
-
-	return baseAssets, symbols, symbolInfo
+	return assets
 }
 
-// Check Binance for new SPOT listings or de-listings and post telegram message.
-func BinanceListingsCheck(oldBaseAssetsList *[]string, oldSymbolsList *[]string, binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) {
-	baseAssets, symbols, symbolInfo := RetrieveBinanceSpotAssets(binanceClient)
+// Check Binance for new listings or de-listings and post Telegram message.
+func BinanceListingsCheck(oldAssets *[]string, binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) {
+	assets := RetrieveBinanceAssets(binanceClient)
 
-	// Check for new base assets and post telegram message.
-	if len(*oldBaseAssetsList) != 0 { // Do not check if first run of the program.
-		removed, newBasebaseAssets := utils.CompareLists(*oldBaseAssetsList, baseAssets)
-		for _, s := range newBasebaseAssets {
+	// Check for new assets and post channel messages.
+	if len(*oldAssets) != 0 { // Do not check if first run of the program.
+		removed, newAssets := utils.CompareLists(*oldAssets, assets)
+		for _, s := range newAssets {
 			// Send telegram message.
 			if enableTelegramMessage {
-				go tg.SendBaseAssetTelegramMessage(telegramBot, telegramChatID, removed, s)
-			}
-
-			// Send discord message..
-			if enableDiscordMessages {
-				go dc.SendBaseAssetDiscordMessage(discordBot, discordChannelIDs, removed, s)
-			}
-		}
-
-		// Store updated base assets list in JSON files.
-		if len(newBasebaseAssets) != 0 {
-			utils.StoreOldListings(baseAssets, nil)
-			*oldBaseAssetsList = baseAssets
-		}
-	}
-
-	// Check for new trading pairs and post telegram message.
-	if len(*oldSymbolsList) != 0 { // Do not check if first run of the program.
-		removed, newSymbols := utils.CompareLists(*oldSymbolsList, symbols)
-		for _, s := range newSymbols {
-			// Send telegram message.
-			if enableTelegramMessage {
-				go tg.SendTradingPairTelegramMessage(telegramBot, telegramChatID, removed, s, symbolInfo)
+				go tg.SendAssetTelegramMessage(telegramBot, telegramChatID, removed, s)
 			}
 
 			// Send discord message.
 			if enableDiscordMessages {
-				go dc.SendTradingPairDiscordMessage(discordBot, discordChannelIDs, removed, s, symbolInfo)
+				go dc.SendAssetDiscordMessage(discordBot, discordChannelIDs, removed, s)
 			}
 		}
 
-		// Store updated symbol list in JSON files.
-		if len(newSymbols) != 0 {
-			utils.StoreOldListings(nil, symbols)
-			*oldSymbolsList = symbols
+		// Store updated assets list in JSON files.
+		if len(newAssets) != 0 {
+			utils.StoreOldListings(assets)
+			*oldAssets = assets
 		}
 	}
 }
