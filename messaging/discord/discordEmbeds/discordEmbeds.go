@@ -1,34 +1,23 @@
-// Description: This package contains functions for creating Discord embeds.
+// Description: The discordEmbeds package contains functions for creating Discord embeds.
 package discordEmbeds
 
 import (
 	"fmt"
-	"log"
-	"strconv"
 
 	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 )
 
-// Convert hex color to int.
-func HexColorToInt(color string) int {
-	colorInt, err := strconv.ParseUint(color, 16, 64)
-	if err != nil {
-		log.Fatalf("Error parsing color: %v", err)
-	}
-	return int(colorInt)
-}
-
-// Asset embed.
+// Initialise default asset embed.
 var (
 	ASSET_EMBED = discordgo.MessageEmbed{
-		Color: HexColorToInt("F3BA2F"),
+		Color: utils.HexColorToInt("F3BA2F"),
 		Image: &discordgo.MessageEmbedImage{URL: "https://t4.ftcdn.net/jpg/04/46/35/17/360_F_446351747_WHAenLH7njEwEAuDf3aJ7Q3WFX9FM18s.jpg"},
 	}
 )
 
-// Returns a string containing a message for a new asset.
+// newAssetMessage returns a string containing a new assets message.
 func newAssetMessage(asset string, symbolInfo binance.Symbol) discordgo.MessageEmbed {
 	embed := ASSET_EMBED
 	embed.Title = fmt.Sprintf("💎 Binance listed new asset (%s)", asset)
@@ -38,7 +27,7 @@ func newAssetMessage(asset string, symbolInfo binance.Symbol) discordgo.MessageE
 	return embed
 }
 
-// Return a string containing a message for a removed asset.
+// removedAssetMessage return a string containing a removed assets message.
 func removedAssetMessage(asset string) discordgo.MessageEmbed {
 	embed := ASSET_EMBED
 	embed.Title = fmt.Sprintf("🗑 Binance removed asset (%s)\n", asset)
@@ -46,12 +35,10 @@ func removedAssetMessage(asset string) discordgo.MessageEmbed {
 	return embed
 }
 
-// Returns a string containing a Discord message for a new or removed asset.
-func AssetEmbed(removed bool, asset string, symbolInfo binance.Symbol) discordgo.MessageEmbed {
-	switch removed {
-	case true:
+// AssetEmbed returns a string containing a new/removed asset Discord message.
+func AssetEmbed(removed bool, asset string, assetInfo binance.Symbol) discordgo.MessageEmbed {
+	if removed {
 		return removedAssetMessage(asset)
-	default:
-		return newAssetMessage(asset, symbolInfo)
 	}
+	return newAssetMessage(asset, assetInfo)
 }

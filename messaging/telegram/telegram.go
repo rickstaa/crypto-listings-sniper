@@ -1,4 +1,4 @@
-// Description: Contains functions for interacting with the Telegram API.
+// Description: The telegram package contains functions for interacting with the Telegram API.
 package telegram
 
 import (
@@ -12,7 +12,7 @@ import (
 	"github.com/rickstaa/crypto-listings-sniper/messaging/telegram/telegramMessages"
 )
 
-// Send a Telegram message to the specified chat.
+// SendTelegramMessage sends a Telegram message to a specified chat.
 func SendTelegramMessage(telegramBot *telego.Bot, chatID int64, message string) {
 	msg := tu.Message(tu.ID(chatID), message)
 	msg.ParseMode = telego.ModeHTML
@@ -22,8 +22,8 @@ func SendTelegramMessage(telegramBot *telego.Bot, chatID int64, message string) 
 	}
 }
 
-// Send a asset Telegram message to the specified chat.
-func SendAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, asset string, symbolInfo binance.Symbol) {
-	message := telegramMessages.AssetMessage(removed, asset, utils.CreateBinanceURL(asset), symbolInfo)
+// SendAssetTelegramMessage send a new/removed asset Telegram message to a specified chat.
+func SendAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed bool, asset string, assetInfo binance.Symbol) {
+	message := telegramMessages.AssetMessage(removed, asset, utils.CreateBinanceURL(asset), assetInfo)
 	SendTelegramMessage(telegramBot, chatID, message)
 }

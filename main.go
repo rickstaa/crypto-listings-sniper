@@ -1,21 +1,21 @@
 package main
 
 import (
-	"context"
 	"log"
-	"time"
+	"runtime"
 
 	"github.com/bwmarrin/discordgo"
 	bn "github.com/rickstaa/crypto-listings-sniper/exchanges/binance"
-	"github.com/rickstaa/crypto-listings-sniper/messaging"
 	dc "github.com/rickstaa/crypto-listings-sniper/messaging/discord"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
-	"golang.org/x/time/rate"
 
 	"github.com/adshao/go-binance/v2"
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
+
+// TODO: Create tests.
+// TODO: Cleanup code.
 
 func main() {
 	binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages := utils.GetEnvVars()
@@ -59,26 +59,11 @@ func main() {
 	binanceClient.SetApiEndpoint("https://api4.binance.com")
 	log.Printf("Binance API endpoint: %s", binanceClient.BaseURL)
 
-	// Retrieve old assets and store them if they do not exist.
-	oldAssets := utils.RetrieveOldListings()
-	if len(oldAssets) == 0 {
-		assets := bn.RetrieveBinanceAssets(binanceClient)
+	// Initialize checkers.
+	binanceListingsChecker := bn.NewBinanceListingsChecker(binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
 
-		utils.StoreOldListings(assets)
-	}
+	// start the checkers.
+	go binanceListingsChecker.Start()
 
-	// Check binance for new listings or de-listings and post Telegram/Discord message.
-	r := rate.Every(1 * time.Millisecond)
-	limiter := rate.NewLimiter(r, 1)
-	for {
-		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
-
-		// retrieve changed assets.
-		removed, changedAssets := bn.BinanceListingsCheck(&oldAssets, binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
-
-		// Post messages.
-		for _, asset := range changedAssets {
-			go messaging.SendAssetMessage(binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages, removed, asset)
-		}
-	}
+	runtime.Goexit() // Keep the program running.
 }

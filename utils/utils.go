@@ -1,4 +1,4 @@
-// Description: This package contains utility functions.
+// Description: The utils package contains contains utility functions.
 package utils
 
 import (
@@ -16,7 +16,7 @@ var (
 	ASSETS_FILE_PATH = "data/assets_list.json"
 )
 
-// Delete empty strings from a slice of strings.
+// deleteEmpty deletes empty strings from a slice of strings.
 func deleteEmpty(s []string) []string {
 	var r []string
 	for _, str := range s {
@@ -24,10 +24,11 @@ func deleteEmpty(s []string) []string {
 			r = append(r, str)
 		}
 	}
+
 	return r
 }
 
-// Retrieve environment variables.
+// GetEnvVars retrieves environment variables.
 func GetEnvVars() (binanceKey string, binanceSecret string, telegramBotKey string, telegramChatID int64, enableTelegramMessage bool, discordBotKey string, discordChannelIDs []string, discordAppID string, enableDiscordMessages bool) {
 	err := godotenv.Load()
 	if err != nil {
@@ -56,7 +57,7 @@ func GetEnvVars() (binanceKey string, binanceSecret string, telegramBotKey strin
 	return binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages
 }
 
-// Check if a string is in a slice of strings.
+// Contains checks if a string is in a slice of strings.
 func Contains(s []string, str string) bool {
 	for _, v := range s {
 		if v == str {
@@ -67,7 +68,7 @@ func Contains(s []string, str string) bool {
 	return false
 }
 
-// Compare two lists of strings and return the difference.
+// CompareLists compares two lists of strings and returns the items that were removed/added in the new list.
 func CompareLists(oldList []string, newList []string) (removed bool, difference []string) {
 	if len(oldList) > len(newList) {
 		for _, s := range oldList {
@@ -92,39 +93,48 @@ func CompareLists(oldList []string, newList []string) (removed bool, difference 
 	return false, []string{}
 }
 
-// Retrieve the old assets from the data folder.
+// RetrieveOldListings retrieves the old listed assets from the data folder.
 func RetrieveOldListings() (oldAssets []string) {
 	oldAssetsJson, err := os.ReadFile(ASSETS_FILE_PATH)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			log.Fatalf("Error reading old assets from file '%s': %v", ASSETS_FILE_PATH, err)
+			log.Fatalf("Error reading old listed assets from file '%s': %v", ASSETS_FILE_PATH, err)
 		}
 	} else {
 		err = json.Unmarshal(oldAssetsJson, &oldAssets)
 		if err != nil {
-			log.Fatalf("Error unmarshalling old assets: %v", err)
+			log.Fatalf("Error unmarshalling old listed assets: %v", err)
 		}
-		log.Printf("Number of old assets: %d", len(oldAssets))
+		log.Printf("Number of old listed assets: %d", len(oldAssets))
 	}
 
 	return oldAssets
 }
 
-// Store the old assets in the data folder.
+// StoreOldListings stores the old listed assets in the data folder.
 func StoreOldListings(assets []string) {
 	if len(assets) != 0 {
 		assetsJson, err := json.Marshal(assets)
 		if err != nil {
-			log.Fatalf("Error marshalling assets list: %v", err)
+			log.Fatalf("Error marshalling listed assets: %v", err)
 		}
 		err = os.WriteFile(ASSETS_FILE_PATH, assetsJson, 0644)
 		if err != nil {
-			log.Fatalf("Error writing assets list to file '%s': %v", ASSETS_FILE_PATH, err)
+			log.Fatalf("Error writing listed assets list to file '%s': %v", ASSETS_FILE_PATH, err)
 		}
 	}
 }
 
-// Create Binance URL for a asset.
+// CreateBinanceURL creates the Binance asset URL.
 func CreateBinanceURL(assetName string) string {
 	return "https://www.binance.com/en/trade/" + assetName
+}
+
+// HexColorToInt converts a hex color to int.
+func HexColorToInt(color string) int {
+	colorInt, err := strconv.ParseUint(color, 16, 64)
+	if err != nil {
+		log.Fatalf("Error parsing color: %v", err)
+	}
+	return int(colorInt)
 }

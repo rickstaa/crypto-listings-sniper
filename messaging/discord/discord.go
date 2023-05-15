@@ -1,4 +1,4 @@
-// Description: Contains functions for interacting with the Discord API.
+// Description: The discord package contains functions for interacting with the Discord API.
 package discord
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/rickstaa/crypto-listings-sniper/messaging/discord/discordEmbeds"
 )
 
-// Setup discord slash commands.
+// SetupDiscordSlashCommands setups the discord slash commands.
 func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID string, telegramInviteLink string) {
 	applicationCommands := []*discordgo.ApplicationCommand{
 		{
@@ -47,8 +47,7 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 		s *discordgo.Session,
 		i *discordgo.InteractionCreate,
 	) {
-		switch i.Type {
-		case discordgo.InteractionApplicationCommand:
+		if i.Type == discordgo.InteractionApplicationCommand {
 			name := i.ApplicationCommandData().Name
 			if h, ok := commandHandlers[name]; ok {
 				h(s, i)
@@ -58,7 +57,7 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 	discordBot.Open()
 }
 
-// Send a Discord embed message to the specified channel.
+// sendDiscordEmbed sends a Discord embed message to the specified channel.
 func sendDiscordEmbed(discordBot *discordgo.Session, discordChannelID string, embed *discordgo.MessageEmbed) {
 	_, err := discordBot.ChannelMessageSendEmbed(discordChannelID, embed)
 	if err != nil {
@@ -66,9 +65,9 @@ func sendDiscordEmbed(discordBot *discordgo.Session, discordChannelID string, em
 	}
 }
 
-// Send Trading pair Discord message to the specified channel.
-func SendAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, asset string, symbolInfo binance.Symbol) {
-	messageEmbed := discordEmbeds.AssetEmbed(removed, asset, symbolInfo)
+// SendAssetDiscordMessage sends a new/removed asset Discord embed message to a specified channel.
+func SendAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, asset string, assetInfo binance.Symbol) {
+	messageEmbed := discordEmbeds.AssetEmbed(removed, asset, assetInfo)
 	for _, channelID := range discordChannelIDs {
 		go sendDiscordEmbed(discordBot, channelID, &messageEmbed)
 	}

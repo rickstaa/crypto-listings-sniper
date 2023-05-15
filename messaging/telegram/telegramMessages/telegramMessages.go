@@ -1,4 +1,4 @@
-// Description: This package contains functions for creating Telegram messages.
+// Description: The telegramMessages package contains functions for creating Telegram messages.
 package telegramMessages
 
 import (
@@ -7,24 +7,22 @@ import (
 	"github.com/adshao/go-binance/v2"
 )
 
-// Returns a string containing a message for a new asset.
+// newAssetMessage returns a new asset Telegram message.
 func newAssetMessage(asset string, url string, symbolInfo binance.Symbol) string {
 	return fmt.Sprintf("💎 <u>Binance listed new asset (<a href='%s'>%s</a>)</u>\n\n", url, asset) +
 		fmt.Sprintf("- <b>Base Asset:</b> %s\n", symbolInfo.BaseAsset) +
 		fmt.Sprintf("- <b>Quota Asset:</b> %s\n", symbolInfo.QuoteAsset)
 }
 
-// Return a string containing a message for a removed asset.
+// removedAssetMessage return a removed asset Telegram message.
 func removedAssetMessage(asset string) string {
 	return fmt.Sprintf("🗑 <u>Binance removed asset (%s)</u>\n", asset)
 }
 
-// Returns a string containing a Telegram message for a new or removed asset.
-func AssetMessage(removed bool, asset string, url string, symbolInfo binance.Symbol) string {
-	switch removed {
-	case true:
+// AssetMessage returns a string containing new/removed asset Telegram message.
+func AssetMessage(removed bool, asset string, url string, assetInfo binance.Symbol) string {
+	if removed {
 		return removedAssetMessage(asset)
-	default:
-		return newAssetMessage(asset, url, symbolInfo)
 	}
+	return newAssetMessage(asset, url, assetInfo)
 }

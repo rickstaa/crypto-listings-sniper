@@ -1,2 +1,2 @@
-// Description: Contains general functions for interacting with exchanges.
+// Description: Package exchanges contains general functions for interacting with exchanges.
 package exchanges
