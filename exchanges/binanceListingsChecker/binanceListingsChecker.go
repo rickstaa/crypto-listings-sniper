@@ -1,5 +1,5 @@
-// Description: Package binance contains functions that are related to Binance.
-package exchanges
+// Description: Package binanceListingsChecker contains a class that when started checks Binance for new listings or de-listings.
+package binanceListingsChecker
 
 import (
 	"context"
@@ -87,6 +87,11 @@ func (blc *BinanceListingsChecker) binanceListingsCheck(oldAssets *[]string) (re
 func (blc *BinanceListingsChecker) Start() {
 	// Retrieve old assets list.
 	oldAssets := utils.RetrieveOldListings()
+	if len(oldAssets) == 0 {
+		// Retrieve assets from Binance if no old assets list is available.
+		oldAssets = blc.retrieveBinanceAssets()
+		utils.StoreOldListings(oldAssets)
+	}
 
 	// Check binance for new listings or de-listings and post Telegram/Discord message.
 	r := rate.Every(1 * time.Millisecond)

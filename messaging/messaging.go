@@ -23,3 +23,16 @@ func SendAssetMessage(binanceClient *binance.Client, telegramBot *telego.Bot, te
 		go dc.SendAssetDiscordMessage(discordBot, discordChannelIDs, removed, asset, assetInfo)
 	}
 }
+
+// Send announcement message to the messaging services.
+func SendAnnouncementMessage(telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool, announcementCode string, announcementTitle string) {
+	// Send telegram message.
+	if enableTelegramMessage {
+		go tg.SendAnnouncementTelegramMessage(telegramBot, telegramChatID, announcementCode, announcementTitle)
+	}
+
+	// Send discord message.
+	if enableDiscordMessages {
+		go dc.SendAnnouncementDiscordMessage(discordBot, discordChannelIDs, announcementCode, announcementTitle)
+	}
+}

@@ -26,3 +26,8 @@ func AssetMessage(removed bool, asset string, url string, assetInfo binance.Symb
 	}
 	return newAssetMessage(asset, url, assetInfo)
 }
+
+// Returns a string containing a message for a new announcement.
+func AnnouncementMessage(url string, title string) string {
+	return fmt.Sprintf("📢 <a href='%s'>%s</a>\n", url, title)
+}

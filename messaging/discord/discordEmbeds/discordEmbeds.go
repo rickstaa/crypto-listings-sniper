@@ -42,3 +42,19 @@ func AssetEmbed(removed bool, asset string, assetInfo binance.Symbol) discordgo.
 	}
 	return newAssetMessage(asset, assetInfo)
 }
+
+// Announcement embed.
+var (
+	ANNOUNCEMENT_EMBED = discordgo.MessageEmbed{
+		Color: utils.HexColorToInt("F3BA2F"),
+		Image: &discordgo.MessageEmbedImage{URL: "https://t4.ftcdn.net/jpg/04/46/35/17/360_F_446351747_WHAenLH7njEwEAuDf3aJ7Q3WFX9FM18s.jpg"},
+	}
+)
+
+// Returns a string containing a message for a new announcement.
+func AnnouncementEmbed(url string, title string) discordgo.MessageEmbed {
+	embed := ANNOUNCEMENT_EMBED
+	embed.Title = fmt.Sprintf("📢 %s", title)
+	embed.URL = url
+	return embed
+}

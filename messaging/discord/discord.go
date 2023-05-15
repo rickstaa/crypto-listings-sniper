@@ -7,6 +7,7 @@ import (
 	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
 	"github.com/rickstaa/crypto-listings-sniper/messaging/discord/discordEmbeds"
+	"github.com/rickstaa/crypto-listings-sniper/utils"
 )
 
 // SetupDiscordSlashCommands setups the discord slash commands.
@@ -68,6 +69,14 @@ func sendDiscordEmbed(discordBot *discordgo.Session, discordChannelID string, em
 // SendAssetDiscordMessage sends a new/removed asset Discord embed message to a specified channel.
 func SendAssetDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, removed bool, asset string, assetInfo binance.Symbol) {
 	messageEmbed := discordEmbeds.AssetEmbed(removed, asset, assetInfo)
+	for _, channelID := range discordChannelIDs {
+		go sendDiscordEmbed(discordBot, channelID, &messageEmbed)
+	}
+}
+
+// Send Announcement Discord message to the specified channel.
+func SendAnnouncementDiscordMessage(discordBot *discordgo.Session, discordChannelIDs []string, announcementCode string, announcementTitle string) {
+	messageEmbed := discordEmbeds.AnnouncementEmbed(utils.CreateBinanceArticleURL(announcementCode, announcementTitle), announcementTitle)
 	for _, channelID := range discordChannelIDs {
 		go sendDiscordEmbed(discordBot, channelID, &messageEmbed)
 	}

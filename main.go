@@ -1,11 +1,18 @@
 package main
 
 import (
+	"context"
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
-	bn "github.com/rickstaa/crypto-listings-sniper/exchanges/binance"
+	"golang.org/x/exp/maps"
+	"golang.org/x/time/rate"
+
+	"github.com/rickstaa/crypto-listings-sniper/exchanges/binanceAnnouncementsChecker"
+	"github.com/rickstaa/crypto-listings-sniper/exchanges/binanceListingsChecker"
+	"github.com/rickstaa/crypto-listings-sniper/messaging"
 	dc "github.com/rickstaa/crypto-listings-sniper/messaging/discord"
 	"github.com/rickstaa/crypto-listings-sniper/utils"
 
@@ -13,9 +20,6 @@ import (
 	"github.com/mymmrac/telego"
 	tu "github.com/mymmrac/telego/telegoutil"
 )
-
-// TODO: Create tests.
-// TODO: Cleanup code.
 
 func main() {
 	binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages := utils.GetEnvVars()
@@ -60,10 +64,49 @@ func main() {
 	log.Printf("Binance API endpoint: %s", binanceClient.BaseURL)
 
 	// Initialize checkers.
-	binanceListingsChecker := bn.NewBinanceListingsChecker(binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
+	binanceListingsChecker := binanceListingsChecker.NewBinanceListingsChecker(binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
 
 	// start the checkers.
 	go binanceListingsChecker.Start()
 
+	// Check Binance for new announcements and post Telegram/Discord message.
+	go BinanceAnnouncementsChecker(binanceClient, telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages)
+
 	runtime.Goexit() // Keep the program running.
+}
+
+// BinanceAnnouncementsChecker periodically checks Binance for new announcements and post Telegram/Discord message.
+func BinanceAnnouncementsChecker(binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) {
+
+	// Retrieve latest Binance announcements codes.
+	oldAnnouncements := utils.RetrieveOldAnnouncements()
+	if len(oldAnnouncements) == 0 {
+		// Retrieve latest Binance announcement and store them if no old announcements are stored.
+		binanceAnnouncements := binanceAnnouncementsChecker.RetrieveLatestBinanceAnnouncements()
+		oldAnnouncements = maps.Keys(binanceAnnouncements)
+		utils.StoreOldAnnouncements(oldAnnouncements)
+	}
+
+	r := rate.Every(1 * time.Second)
+	limiter := rate.NewLimiter(r, 1)
+	for {
+		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
+
+		// Retrieve latest Binance announcement.
+		announcements := binanceAnnouncementsChecker.RetrieveLatestBinanceAnnouncements()
+
+		// Retrieve codes from announcement map
+		announcementCodes := maps.Keys(announcements)
+
+		_, newAnnouncements := utils.CompareLists(oldAnnouncements, announcementCodes)
+
+		if len(newAnnouncements) > 0 {
+			oldAnnouncements = announcementCodes
+
+			// Send Telegram/Discord message.
+			for _, announcementCode := range newAnnouncements {
+				go messaging.SendAnnouncementMessage(telegramBot, telegramChatID, enableTelegramMessage, discordBot, discordChannelIDs, enableDiscordMessages, announcementCode, announcements[announcementCode])
+			}
+		}
+	}
 }

@@ -27,3 +27,9 @@ func SendAssetTelegramMessage(telegramBot *telego.Bot, chatID int64, removed boo
 	message := telegramMessages.AssetMessage(removed, asset, utils.CreateBinanceURL(asset), assetInfo)
 	SendTelegramMessage(telegramBot, chatID, message)
 }
+
+// Send a announcement Telegram message to the specified chat.
+func SendAnnouncementTelegramMessage(telegramBot *telego.Bot, chatID int64, announcementCode, announcementTitle string) {
+	message := telegramMessages.AnnouncementMessage(utils.CreateBinanceArticleURL(announcementCode, announcementTitle), announcementTitle)
+	SendTelegramMessage(telegramBot, chatID, message)
+}

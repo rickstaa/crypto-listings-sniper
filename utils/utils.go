@@ -3,6 +3,7 @@ package utils
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"strconv"
@@ -13,7 +14,8 @@ import (
 
 // Global variables.
 var (
-	ASSETS_FILE_PATH = "data/assets_list.json"
+	ASSETS_FILE_PATH        = "data/assets_list.json"
+	ANNOUNCEMENTS_FILE_PATH = "data/announcements_list.json"
 )
 
 // deleteEmpty deletes empty strings from a slice of strings.
@@ -125,9 +127,65 @@ func StoreOldListings(assets []string) {
 	}
 }
 
-// CreateBinanceURL creates the Binance asset URL.
+// RetrieveOldAnnouncements retrieves the old announcements from the data folder.
+func RetrieveOldAnnouncements() (oldAnnouncements []string) {
+	oldAssetsJson, err := os.ReadFile(ANNOUNCEMENTS_FILE_PATH)
+	if err != nil {
+		if !os.IsNotExist(err) {
+			log.Fatalf("Error reading old announcements from file '%s': %v", ANNOUNCEMENTS_FILE_PATH, err)
+		}
+	} else {
+		err = json.Unmarshal(oldAssetsJson, &oldAnnouncements)
+		if err != nil {
+			log.Fatalf("Error unmarshalling old announcements: %v", err)
+		}
+		log.Printf("Number of old assets: %d", len(oldAnnouncements))
+	}
+
+	return oldAnnouncements
+}
+
+// StoreOldAnnouncements store the old assets in the data folder.
+func StoreOldAnnouncements(announcements []string) {
+	if len(announcements) != 0 {
+		announcementsJson, err := json.Marshal(announcements)
+		if err != nil {
+			log.Fatalf("Error marshalling announcements list: %v", err)
+		}
+		err = os.WriteFile(ANNOUNCEMENTS_FILE_PATH, announcementsJson, 0644)
+		if err != nil {
+			log.Fatalf("Error writing announcements list to file '%s': %v", ANNOUNCEMENTS_FILE_PATH, err)
+		}
+	}
+}
+
+// Create Binance URL for a asset.
 func CreateBinanceURL(assetName string) string {
 	return "https://www.binance.com/en/trade/" + assetName
+}
+
+// CreateBinanceArticleURL returns the binance article URL.
+func CreateBinanceArticleURL(articleCode string, articleTitle string) string {
+	// Replace spaces with hypens and make lowercase.
+	articleTitle = strings.ReplaceAll(articleTitle, " ", "-")
+	articleTitle = strings.ToLower(articleTitle)
+
+	return fmt.Sprintf("https://www.binance.com/en/support/announcement/%s-%s", articleTitle, articleCode)
+}
+
+// GetBinanceAnnouncementsEndpoint returns the (unofficial) binance announcements endpoint.
+func GetBinanceAnnouncementsEndpoint() string {
+	queries := map[string]string{
+		"catalogId": "48",
+		"pageNo":    "1",
+		"pageSize":  "10", // NOTE: This is to prevent the endpoint from being cached.
+	}
+	var url strings.Builder
+	url.WriteString("https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?")
+	for key, value := range queries {
+		url.WriteString(key + "=" + value + "&")
+	}
+	return url.String()
 }
 
 // HexColorToInt converts a hex color to int.
