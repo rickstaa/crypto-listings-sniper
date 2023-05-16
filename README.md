@@ -4,7 +4,6 @@ A small bot that watches exchanges for new coin/token listings and, in less than
 
 ![crypto-sniper](https://github.com/rickstaa/crypto-listings-sniper/assets/17570430/11777a75-4064-4034-932e-b3c11403a181)
 
-
 ## Supported exchanges
 
 This bot currently supports the following exchanges:
@@ -20,8 +19,8 @@ This bot currently supports the following exchanges:
 
 ## How to use
 
-1. Setup a discord application (see [this guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#what-is-a-token-anyway)).
-2. Setup a telegram bot (see [this guide](https://telegrambots.github.io/book/1/quickstart.html)).
+1. Setup a discord application (see [this guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#what-is-a-token-anyway)). Ensure that the `Send Messages` and `Embed Links` permissions are enabled.
+2. Set up a telegram bot (see [this guide](https://telegrambots.github.io/book/1/quickstart.html)).
 3. Install the Golang dependencies using `go get`.
 4. Build the bot using `go build`
 5. Rename the `.env.tamplate` file to `.env` and insert the required environmental variables.
