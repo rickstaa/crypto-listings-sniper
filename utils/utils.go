@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -160,9 +161,19 @@ func RetrieveOldListings() (oldAssets []string) {
 	return oldAssets
 }
 
+// CreateDataFolder creates the data folder if it doesn't exist.
+func ensureDataFolderExistence() {
+	dataPath := path.Dir(ASSETS_FILE_PATH)
+	err := os.MkdirAll(dataPath, os.ModePerm)
+	if err != nil {
+		log.Fatalf("Error creating data folder: %v", err)
+	}
+}
+
 // StoreOldListings stores the old listed assets in the data folder.
 func StoreOldListings(assets []string) {
 	if len(assets) != 0 {
+		ensureDataFolderExistence()
 		assetsJson, err := json.Marshal(assets)
 		if err != nil {
 			log.Fatalf("Error marshalling listed assets: %v", err)
@@ -195,6 +206,7 @@ func RetrieveOldAnnouncements() (oldAnnouncements []string) {
 // StoreOldAnnouncements store the old assets in the data folder.
 func StoreOldAnnouncements(announcements []string) {
 	if len(announcements) != 0 {
+		ensureDataFolderExistence()
 		announcementsJson, err := json.Marshal(announcements)
 		if err != nil {
 			log.Fatalf("Error marshalling announcements list: %v", err)
