@@ -159,7 +159,7 @@ func (blc *BinanceAnnouncementsChecker) Start(maxRate float64) {
 			// Post telegram and discord messages.
 			go messaging.SendAnnouncementMessage(blc.telegramBot, blc.telegramChatID, blc.enableTelegramMessage, blc.discordBot, blc.discordChannelIDs, blc.enableDiscordMessages, announcementCode, newAnnouncements[announcementCode])
 
-			utils.StoreOldListings(oldAnnouncements)
+			utils.StoreOldAnnouncements(oldAnnouncements)
 		}
 	}
 }
