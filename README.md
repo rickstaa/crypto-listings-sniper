@@ -1,10 +1,10 @@
 # Crypto Listing Sniper
 
-![crypto-sniper](https://github.com/rickstaa/crypto-listings-sniper/assets/17570430/387778ba-20ea-4e81-9470-e618c0c8b433)
-
 A bot that watches several exchanges for new coin/token listings and posts a Telegram/Discord message. Currently supports the following exchanges:
 
 - [Binance](https://www.binance.com/en)
+
+![crypto-sniper](https://github.com/rickstaa/crypto-listings-sniper/assets/17570430/e28dcb5d-9853-459f-878e-1fa754c4e628)
 
 ## Features
 
