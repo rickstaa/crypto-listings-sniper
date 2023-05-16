@@ -109,6 +109,7 @@ func GetEnvVars() (envVars EnvVars) {
 
 // HexColorToInt converts a hex color to int.
 func HexColorToInt(color string) int {
+	color = strings.TrimPrefix(color, "#")
 	colorInt, err := strconv.ParseUint(color, 16, 64)
 	if err != nil {
 		log.Fatalf("Error parsing color: %v", err)
