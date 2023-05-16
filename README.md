@@ -1,6 +1,6 @@
 # Crypto Listing Sniper
 
-A bot that watches several exchanges for new coin/token listings and within `0.3` seconds posts a Telegram/Discord message. You can join [this telegram group](https://t.me/+FhGPbg270vwwNDRk) to see it in action.
+This repository contains a small bot that watches exchanges for new coin/token listings and, in less than `0.3` seconds, posts a Telegram/Discord message. You can join [this telegram group](https://t.me/+FhGPbg270vwwNDRk) to see it in action.
 
 ![crypto-sniper](https://github.com/rickstaa/crypto-listings-sniper/assets/17570430/11777a75-4064-4034-932e-b3c11403a181)
 
