@@ -2,7 +2,7 @@
 
 A bot that watches several exchanges for new coin/token listings and posts a Telegram/Discord message. Currently supports the following exchanges:
 
-- Binance
+- [Binance](https://www.binance.com/en)
 
 ## Features
 
@@ -13,8 +13,8 @@ A bot that watches several exchanges for new coin/token listings and posts a Tel
 
 ## How to use
 
-1. Setup a discord application (see https://discordjs.guide/preparations/setting-up-a-bot-application.html#what-is-a-token-anyway).
-2. Setup a telegram bot (see https://telegrambots.github.io/book/1/quickstart.html).
+1. Setup a discord application (see [this guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#what-is-a-token-anyway)).
+2. Setup a telegram bot (see [this guide](https://telegrambots.github.io/book/1/quickstart.html)).
 3. Install the Golang dependencies using `go get`.
 4. Build the bot using `go build`
 5. Rename the `.env.tamplate` file to `.env` and insert the required environmental variables.
