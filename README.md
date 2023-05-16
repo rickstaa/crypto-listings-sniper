@@ -19,7 +19,7 @@ This bot currently supports the following exchanges:
 
 ## How to use
 
-1. Setup a discord application (see [this guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#what-is-a-token-anyway)). Ensure that the `Send Messages` and `Embed Links` permissions are enabled.
+1. Setup a discord application (see [this guide](https://discordjs.guide/preparations/setting-up-a-bot-application.html#what-is-a-token-anyway)). Ensure that on the URL Generator step, you select the `bot` and `applications.commands` scopes and that the `Send Messages` and `Embed Links` permissions are requested.
 2. Set up a telegram bot (see [this guide](https://telegrambots.github.io/book/1/quickstart.html)).
 3. Install the Golang dependencies using `go get`.
 4. Build the bot using `go build`
