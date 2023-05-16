@@ -11,7 +11,7 @@ import (
 )
 
 // SetupDiscordSlashCommands setups the discord slash commands.
-func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID string, telegramInviteLink string, GithubRepoURL string) {
+func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID string, telegramInviteLink string) {
 	applicationCommands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "telegram-invite",
@@ -50,7 +50,7 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 					Type: discordgo.InteractionResponseChannelMessageWithSource,
 					Data: &discordgo.InteractionResponseData{
 						Flags:   discordgo.MessageFlagsEphemeral,
-						Content: GithubRepoURL,
+						Content: "https://github.com/rickstaa/crypto-listings-sniper",
 					},
 				},
 			)
@@ -69,11 +69,8 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 		s *discordgo.Session,
 		i *discordgo.InteractionCreate,
 	) {
-		if i.Type == discordgo.InteractionApplicationCommand {
-			name := i.ApplicationCommandData().Name
-			if h, ok := commandHandlers[name]; ok {
-				h(s, i)
-			}
+		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
 		}
 	})
 	discordBot.Open()

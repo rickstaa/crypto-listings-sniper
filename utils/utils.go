@@ -54,7 +54,6 @@ type EnvVars struct {
 	EnableDiscordMessages    bool
 	BinanceListingsRate      float64
 	BinanceAnnouncementsRate float64
-	GithubRepoURL            string
 }
 
 // GetEnvVars retrieves the programs environment variables.
@@ -90,7 +89,6 @@ func GetEnvVars() (envVars EnvVars) {
 	if err != nil {
 		log.Fatalf("Error parsing BINANCE_LISTINGS_RATE: %v", err)
 	}
-	githubRepoURL := os.Getenv("GITHUB_REPO_URL")
 
 	return EnvVars{
 		BinanceKey:               binanceKey,
@@ -104,7 +102,6 @@ func GetEnvVars() (envVars EnvVars) {
 		EnableDiscordMessages:    enableDiscordMessages,
 		BinanceListingsRate:      binance_listings_rate,
 		BinanceAnnouncementsRate: binance_announcements_rate,
-		GithubRepoURL:            githubRepoURL,
 	}
 }
 

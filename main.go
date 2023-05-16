@@ -24,14 +24,12 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error loading Telegram telegramBot: %v", err)
 	}
-	defer telegramBot.Close()
 
 	// Load Discord bot.
 	discordBot, err := discordgo.New("Bot " + envVars.DiscordBotKey)
 	if err != nil {
 		log.Fatalf("Error loading Discord bot: %v", err)
 	}
-	defer discordBot.Close()
 
 	// Log Telegram bot and channel info.
 	telegramBotInfo, err := telegramBot.GetMe()
@@ -51,7 +49,7 @@ func main() {
 	log.Printf("Chat description: %s", telegramChat.Description)
 
 	// Register slash commands.
-	dc.SetupDiscordSlashCommands(discordBot, envVars.DiscordAppID, telegramChat.InviteLink, envVars.GithubRepoURL)
+	dc.SetupDiscordSlashCommands(discordBot, envVars.DiscordAppID, telegramChat.InviteLink)
 
 	// Initialize Binance client.
 	binanceClient := binance.NewClient(envVars.BinanceKey, envVars.BinanceSecret)

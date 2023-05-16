@@ -4,7 +4,9 @@ package binanceAnnouncementsChecker
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 
 	"github.com/adshao/go-binance/v2"
@@ -23,14 +25,19 @@ func getBinanceAnnouncementsEndpoint() string {
 	queries := map[string]string{
 		"catalogId": "48",
 		"pageNo":    "1",
-		"pageSize":  "10", // NOTE: This is to prevent the endpoint from being cached.
+		"pageSize":  fmt.Sprintf("%d", rand.Intn(50-10)+10),
 	}
 	var url strings.Builder
 	url.WriteString("https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?")
+
+	// Add queries to url.
 	for key, value := range queries {
 		url.WriteString(key + "=" + value + "&")
 	}
-	return url.String()
+	urlString := url.String()
+	urlString = urlString[:len(urlString)-1]
+
+	return urlString
 }
 
 // BinanceAnnouncement represents the Binance announcement.
