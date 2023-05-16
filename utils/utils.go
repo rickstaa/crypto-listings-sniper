@@ -1,4 +1,4 @@
-// Description: The utils package contains contains utility functions.
+// Description: The utils package contains several utility functions.
 package utils
 
 import (
@@ -12,7 +12,6 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Global variables.
 var (
 	ASSETS_FILE_PATH        = "data/assets_list.json"
 	ANNOUNCEMENTS_FILE_PATH = "data/announcements_list.json"
@@ -30,37 +29,8 @@ func deleteEmpty(s []string) []string {
 	return r
 }
 
-// GetEnvVars retrieves environment variables.
-func GetEnvVars() (binanceKey string, binanceSecret string, telegramBotKey string, telegramChatID int64, enableTelegramMessage bool, discordBotKey string, discordChannelIDs []string, discordAppID string, enableDiscordMessages bool) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
-	}
-
-	binanceKey = os.Getenv("BINANCE_API_Key")
-	binanceSecret = os.Getenv("BINANCE_API_SECRET_KEY")
-	telegramBotKey = os.Getenv("TELEGRAM_BOT_TOKEN")
-	enableTelegramMessage, err = strconv.ParseBool(os.Getenv("ENABLE_TELEGRAM_MESSAGES"))
-	if err != nil {
-		log.Fatalf("Error parsing ENABLE_TELEGRAM_MESSAGES: %v", err)
-	}
-	discordBotKey = os.Getenv("DISCORD_BOT_TOKEN")
-	telegramChatID, err = strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
-	if err != nil {
-		log.Fatalf("Error parsing TELEGRAM_CHAT_ID: %v", err)
-	}
-	discordChannelIDs = deleteEmpty(strings.Split(os.Getenv("DISCORD_CHANNEL_IDS"), ","))
-	discordAppID = os.Getenv("DISCORD_APP_ID")
-	enableDiscordMessages, err = strconv.ParseBool(os.Getenv("ENABLE_DISCORD_MESSAGES"))
-	if err != nil {
-		log.Fatalf("Error parsing ENABLE_DISCORD_MESSAGES: %v", err)
-	}
-
-	return binanceKey, binanceSecret, telegramBotKey, telegramChatID, enableTelegramMessage, discordBotKey, discordChannelIDs, discordAppID, enableDiscordMessages
-}
-
 // Contains checks if a string is in a slice of strings.
-func Contains(s []string, str string) bool {
+func contains(s []string, str string) bool {
 	for _, v := range s {
 		if v == str {
 			return true
@@ -70,11 +40,87 @@ func Contains(s []string, str string) bool {
 	return false
 }
 
+// EnvVars represents the programs environment variables.
+type EnvVars struct {
+	BinanceKey               string
+	BinanceSecret            string
+	TelegramBotKey           string
+	TelegramChatID           int64
+	EnableTelegramMessage    bool
+	DiscordBotKey            string
+	DiscordChannelIDs        []string
+	DiscordAppID             string
+	EnableDiscordMessages    bool
+	BinanceListingsRate      float64
+	BinanceAnnouncementsRate float64
+	GithubRepoURL            string
+}
+
+// GetEnvVars retrieves the programs environment variables.
+func GetEnvVars() (envVars EnvVars) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
+	binanceKey := os.Getenv("BINANCE_API_Key")
+	binanceSecret := os.Getenv("BINANCE_API_SECRET_KEY")
+	telegramBotKey := os.Getenv("TELEGRAM_BOT_TOKEN")
+	enableTelegramMessage, err := strconv.ParseBool(os.Getenv("ENABLE_TELEGRAM_MESSAGES"))
+	if err != nil {
+		log.Fatalf("Error parsing ENABLE_TELEGRAM_MESSAGES: %v", err)
+	}
+	discordBotKey := os.Getenv("DISCORD_BOT_TOKEN")
+	telegramChatID, err := strconv.ParseInt(os.Getenv("TELEGRAM_CHAT_ID"), 10, 64)
+	if err != nil {
+		log.Fatalf("Error parsing TELEGRAM_CHAT_ID: %v", err)
+	}
+	discordChannelIDs := deleteEmpty(strings.Split(os.Getenv("DISCORD_CHANNEL_IDS"), ","))
+	discordAppID := os.Getenv("DISCORD_APP_ID")
+	enableDiscordMessages, err := strconv.ParseBool(os.Getenv("ENABLE_DISCORD_MESSAGES"))
+	if err != nil {
+		log.Fatalf("Error parsing ENABLE_DISCORD_MESSAGES: %v", err)
+	}
+	binance_listings_rate, err := strconv.ParseFloat(os.Getenv("BINANCE_LISTINGS_RATE"), 64)
+	if err != nil {
+		log.Fatalf("Error parsing BINANCE_LISTINGS_RATE: %v", err)
+	}
+	binance_announcements_rate, err := strconv.ParseFloat(os.Getenv("BINANCE_ANNOUNCEMENTS_RATE"), 64)
+	if err != nil {
+		log.Fatalf("Error parsing BINANCE_LISTINGS_RATE: %v", err)
+	}
+	githubRepoURL := os.Getenv("GITHUB_REPO_URL")
+
+	return EnvVars{
+		BinanceKey:               binanceKey,
+		BinanceSecret:            binanceSecret,
+		TelegramBotKey:           telegramBotKey,
+		TelegramChatID:           telegramChatID,
+		EnableTelegramMessage:    enableTelegramMessage,
+		DiscordBotKey:            discordBotKey,
+		DiscordChannelIDs:        discordChannelIDs,
+		DiscordAppID:             discordAppID,
+		EnableDiscordMessages:    enableDiscordMessages,
+		BinanceListingsRate:      binance_listings_rate,
+		BinanceAnnouncementsRate: binance_announcements_rate,
+		GithubRepoURL:            githubRepoURL,
+	}
+}
+
+// HexColorToInt converts a hex color to int.
+func HexColorToInt(color string) int {
+	colorInt, err := strconv.ParseUint(color, 16, 64)
+	if err != nil {
+		log.Fatalf("Error parsing color: %v", err)
+	}
+	return int(colorInt)
+}
+
 // CompareLists compares two lists of strings and returns the items that were removed/added in the new list.
 func CompareLists(oldList []string, newList []string) (removed bool, difference []string) {
 	if len(oldList) > len(newList) {
 		for _, s := range oldList {
-			if !Contains(newList, s) {
+			if !contains(newList, s) {
 				difference = append(difference, s)
 			}
 		}
@@ -84,7 +130,7 @@ func CompareLists(oldList []string, newList []string) (removed bool, difference 
 		// If the length of the new list is greater than the old list.
 		for _, s := range newList {
 			removed = false
-			if !Contains(oldList, s) {
+			if !contains(oldList, s) {
 				difference = append(difference, s)
 			}
 		}
@@ -159,40 +205,15 @@ func StoreOldAnnouncements(announcements []string) {
 	}
 }
 
-// Create Binance URL for a asset.
+// CreateBinanceURL returns the assets Binance URL.
 func CreateBinanceURL(assetName string) string {
 	return "https://www.binance.com/en/trade/" + assetName
 }
 
 // CreateBinanceArticleURL returns the binance article URL.
 func CreateBinanceArticleURL(articleCode string, articleTitle string) string {
-	// Replace spaces with hypens and make lowercase.
-	articleTitle = strings.ReplaceAll(articleTitle, " ", "-")
-	articleTitle = strings.ToLower(articleTitle)
+	// Make the article title lowercase and replace spaces with dashes.
+	articleTitle = strings.ToLower(strings.ReplaceAll(articleTitle, " ", "-"))
 
 	return fmt.Sprintf("https://www.binance.com/en/support/announcement/%s-%s", articleTitle, articleCode)
-}
-
-// GetBinanceAnnouncementsEndpoint returns the (unofficial) binance announcements endpoint.
-func GetBinanceAnnouncementsEndpoint() string {
-	queries := map[string]string{
-		"catalogId": "48",
-		"pageNo":    "1",
-		"pageSize":  "10", // NOTE: This is to prevent the endpoint from being cached.
-	}
-	var url strings.Builder
-	url.WriteString("https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?")
-	for key, value := range queries {
-		url.WriteString(key + "=" + value + "&")
-	}
-	return url.String()
-}
-
-// HexColorToInt converts a hex color to int.
-func HexColorToInt(color string) int {
-	colorInt, err := strconv.ParseUint(color, 16, 64)
-	if err != nil {
-		log.Fatalf("Error parsing color: %v", err)
-	}
-	return int(colorInt)
 }

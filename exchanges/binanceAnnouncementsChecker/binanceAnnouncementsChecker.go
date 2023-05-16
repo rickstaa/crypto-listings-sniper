@@ -1,14 +1,37 @@
 // Description: Package binanceAnnouncementsChecker contains a class that when started checks the unofficial Binance announcements api for new announcements.
-// NOTE: Retrieved from https://stackoverflow.com/a/69673063/8135687.
 package binanceAnnouncementsChecker
 
 import (
+	"context"
 	"encoding/json"
 	"log"
 	"strings"
 
+	"github.com/adshao/go-binance/v2"
+	"github.com/bwmarrin/discordgo"
+	"github.com/mymmrac/telego"
+	"github.com/rickstaa/crypto-listings-sniper/messaging"
+	"github.com/rickstaa/crypto-listings-sniper/utils"
 	"github.com/valyala/fasthttp"
+	"golang.org/x/exp/maps"
+	"golang.org/x/time/rate"
 )
+
+// getBinanceAnnouncementsEndpoint returns the (unofficial) binance announcements endpoint.
+// NOTE: Retrieved from https://stackoverflow.com/a/69673063/8135687.
+func getBinanceAnnouncementsEndpoint() string {
+	queries := map[string]string{
+		"catalogId": "48",
+		"pageNo":    "1",
+		"pageSize":  "10", // NOTE: This is to prevent the endpoint from being cached.
+	}
+	var url strings.Builder
+	url.WriteString("https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?")
+	for key, value := range queries {
+		url.WriteString(key + "=" + value + "&")
+	}
+	return url.String()
+}
 
 // BinanceAnnouncement represents the Binance announcement.
 type BinanceAnnouncements struct {
@@ -40,35 +63,41 @@ type BinanceArticle struct {
 	Footer      string `json:"footer"`
 }
 
-// BinanceAnnouncementsEndpoint returns the binance announcements endpoint while making sure that the endpoint is not cached.
-func BinanceAnnouncementsEndpoint() string {
-	queries := map[string]string{
-		"catalogId": "48",
-		"pageNo":    "1",
-		"pageSize":  "10", // NOTE: This is to prevent the endpoint from being cached.
-	}
-	var url strings.Builder
-	url.WriteString("https://www.binance.com/bapi/composite/v1/public/cms/article/catalog/list/query?")
-	for key, value := range queries {
-		url.WriteString(key + "=" + value + "&")
-	}
-	return url.String()
+// BinanceAnnouncementsChecker is a class that when started checks Binance for new announcements and posts a message in set message channels
+type BinanceAnnouncementsChecker struct {
+	binanceClient         *binance.Client
+	telegramBot           *telego.Bot
+	telegramChatID        int64
+	enableTelegramMessage bool
+	discordBot            *discordgo.Session
+	discordChannelIDs     []string
+	enableDiscordMessages bool
 }
 
-// Retrieves the Latest Binance announcement from the hidden Binance announcements endpoint.
-// NOTE: Endpoint https://stackoverflow.com/a/69673063/8135687.
-func RetrieveLatestBinanceAnnouncements() (binanceAnnouncements map[string]string) {
+// newBinanceAnnouncementsChecker creates a new BinanceAnnouncementsChecker.
+func NewBinanceAnnouncementsChecker(binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) *BinanceAnnouncementsChecker {
+	return &BinanceAnnouncementsChecker{
+		binanceClient:         binanceClient,
+		telegramBot:           telegramBot,
+		telegramChatID:        telegramChatID,
+		enableTelegramMessage: enableTelegramMessage,
+		discordBot:            discordBot,
+		discordChannelIDs:     discordChannelIDs,
+		enableDiscordMessages: enableDiscordMessages,
+	}
+}
+
+// Retrieves the Binance announcements from the Binance announcements endpoint.
+func (blc *BinanceAnnouncementsChecker) retrieveBinanceAnnouncements() (binanceAnnouncements map[string]string) {
 	request := fasthttp.AcquireRequest()
 	response := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseRequest(request)
 	defer fasthttp.ReleaseResponse(response)
 
 	// Make request.
-	request.SetRequestURI(BinanceAnnouncementsEndpoint())
+	request.SetRequestURI(getBinanceAnnouncementsEndpoint())
 	request.Header.SetMethod("GET")
 	request.Header.Set("Content-Type", "application/json")
-
-	// Retrieve response.
 	err := fasthttp.Do(request, response)
 	if err != nil {
 		log.Fatalf("Error scraping binance announcements endpoint: %v", err)
@@ -81,11 +110,56 @@ func RetrieveLatestBinanceAnnouncements() (binanceAnnouncements map[string]strin
 		log.Fatalf("Error unmarshalling binance announcements response: %v", err)
 	}
 
-	// Store last 10 announcement in map.
+	// Return last 10 announcements.
 	binanceAnnouncements = make(map[string]string)
 	for _, article := range announcements.Data.Articles[:10] {
 		binanceAnnouncements[article.Code] = article.Title
 	}
-
 	return binanceAnnouncements
+}
+
+// changedListings checks whether new announcements have been published on Binance.
+func (blc *BinanceAnnouncementsChecker) binanceAnnouncementsCheck(oldAnnouncementsCodes *[]string) (newAnnouncementsCodes []string, newAnnouncements map[string]string) {
+	announcements := blc.retrieveBinanceAnnouncements()
+
+	// Check if new announcements have been published.
+	announcementsCodes := maps.Keys(announcements)
+	_, newAnnouncementsCodes = utils.CompareLists(*oldAnnouncementsCodes, announcementsCodes)
+	*oldAnnouncementsCodes = announcementsCodes
+
+	// Create new announcements map.
+	newAnnouncements = make(map[string]string)
+	for _, code := range newAnnouncementsCodes {
+		newAnnouncements[code] = announcements[code]
+	}
+
+	return newAnnouncementsCodes, newAnnouncements
+}
+
+// Start starts the BinanceAnnouncementsChecker.
+func (blc *BinanceAnnouncementsChecker) Start(maxRate float64) {
+	// Retrieve (old) Binance announcements.
+	oldAnnouncements := utils.RetrieveOldAnnouncements()
+	if len(oldAnnouncements) == 0 { // Get from Binance if no old announcements are stored.
+		binanceAnnouncements := blc.retrieveBinanceAnnouncements()
+		oldAnnouncements = maps.Keys(binanceAnnouncements)
+		utils.StoreOldAnnouncements(oldAnnouncements)
+	}
+
+	// Check binance for new announcements and post Telegram/Discord message.
+	limiter := rate.NewLimiter(rate.Limit(maxRate), 1)
+	for {
+		limiter.Wait(context.Background()) // NOTE: This is to prevent binance from blocking the IP address.
+
+		// Check for new announcements.
+		newAnnouncementsCodes, newAnnouncements := blc.binanceAnnouncementsCheck(&oldAnnouncements)
+
+		// Post messages.
+		for _, announcementCode := range newAnnouncementsCodes {
+			// Post telegram and discord messages.
+			go messaging.SendAnnouncementMessage(blc.telegramBot, blc.telegramChatID, blc.enableTelegramMessage, blc.discordBot, blc.discordChannelIDs, blc.enableDiscordMessages, announcementCode, newAnnouncements[announcementCode])
+
+			utils.StoreOldListings(oldAnnouncements)
+		}
+	}
 }

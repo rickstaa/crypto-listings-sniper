@@ -11,11 +11,17 @@ import (
 )
 
 // SetupDiscordSlashCommands setups the discord slash commands.
-func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID string, telegramInviteLink string) {
+func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID string, telegramInviteLink string, GithubRepoURL string) {
 	applicationCommands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "telegram-invite",
 			Description: "Get a invite link to the telegram channel.",
+			Type:        discordgo.ChatApplicationCommand,
+			Options:     []*discordgo.ApplicationCommandOption{},
+		},
+		{
+			Name:        "github-repo",
+			Description: "Get a link to the bots Github repository.",
 			Type:        discordgo.ChatApplicationCommand,
 			Options:     []*discordgo.ApplicationCommandOption{},
 		},
@@ -37,12 +43,27 @@ func SetupDiscordSlashCommands(discordBot *discordgo.Session, discordAppID strin
 				log.Fatalf("Error responding to telegram invite slash command: %v", err)
 			}
 		},
+		"github-repo": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			err := s.InteractionRespond(
+				i.Interaction,
+				&discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Flags:   discordgo.MessageFlagsEphemeral,
+						Content: GithubRepoURL,
+					},
+				},
+			)
+			if err != nil {
+				log.Fatalf("Error responding to github repo slash command: %v", err)
+			}
+		},
 	}
 
 	// Register slash commands and handlers.
 	_, err := discordBot.ApplicationCommandBulkOverwrite(discordAppID, "", applicationCommands)
 	if err != nil {
-		log.Fatalf("Error creating invite slash command: %v", err)
+		log.Fatalf("Error creating global slash commands: %v", err)
 	}
 	discordBot.AddHandler(func(
 		s *discordgo.Session,

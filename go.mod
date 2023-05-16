@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	github.com/andybalholm/brotli v1.0.5 // indirect
+	github.com/andybalholm/brotli v1.0.5 // indirects
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/fasthttp/router v1.4.18 // indirect
 	github.com/felixge/fgprof v0.9.3 // indirect

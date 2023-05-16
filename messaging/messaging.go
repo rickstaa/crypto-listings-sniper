@@ -1,4 +1,5 @@
 // Description: The messaging package contains general functions for sending messages to supported messaging services.
+// Note: Currently only Discord and Telegram are supported.
 
 package messaging
 
@@ -7,31 +8,27 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/mymmrac/telego"
 	dc "github.com/rickstaa/crypto-listings-sniper/messaging/discord"
+
 	tg "github.com/rickstaa/crypto-listings-sniper/messaging/telegram"
 )
 
-// SendAssetMessage sends a message to the supported messaging services.
-// NOTE: Currently only Telegram and Discord are supported.
-func SendAssetMessage(binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool, removed bool, asset string, assetInfo binance.Symbol) {
-	// Send telegram message.
+// SendAssetMessage sends a new/removed assets message to the supported messaging services.
+func SendAssetMessage(telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool, removed bool, asset string, assetInfo binance.Symbol) {
 	if enableTelegramMessage {
 		go tg.SendAssetTelegramMessage(telegramBot, telegramChatID, removed, asset, assetInfo)
 	}
 
-	// Send discord message.
 	if enableDiscordMessages {
 		go dc.SendAssetDiscordMessage(discordBot, discordChannelIDs, removed, asset, assetInfo)
 	}
 }
 
-// Send announcement message to the messaging services.
+// SendAnnouncementMessage sends a new announcement message to the messaging services.
 func SendAnnouncementMessage(telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool, announcementCode string, announcementTitle string) {
-	// Send telegram message.
 	if enableTelegramMessage {
 		go tg.SendAnnouncementTelegramMessage(telegramBot, telegramChatID, announcementCode, announcementTitle)
 	}
 
-	// Send discord message.
 	if enableDiscordMessages {
 		go dc.SendAnnouncementDiscordMessage(discordBot, discordChannelIDs, announcementCode, announcementTitle)
 	}
