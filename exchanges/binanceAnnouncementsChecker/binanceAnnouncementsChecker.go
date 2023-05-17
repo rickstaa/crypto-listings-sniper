@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/adshao/go-binance/v2"
 	"github.com/bwmarrin/discordgo"
@@ -79,6 +80,7 @@ type BinanceAnnouncementsChecker struct {
 	discordBot            *discordgo.Session
 	discordChannelIDs     []string
 	enableDiscordMessages bool
+	lastCheckTime         time.Time
 }
 
 // newBinanceAnnouncementsChecker creates a new BinanceAnnouncementsChecker.
@@ -109,6 +111,14 @@ func (blc *BinanceAnnouncementsChecker) retrieveBinanceAnnouncements() (binanceA
 	if err != nil {
 		log.Fatalf("Error scraping binance announcements endpoint: %v", err)
 	}
+	if response.StatusCode() != 200 {
+		if time.Since(blc.lastCheckTime) > time.Minute { // Only log every minute.
+			log.Printf("WARNING: Announcement API endpoint not responding.")
+			blc.lastCheckTime = time.Now()
+		}
+		return binanceAnnouncements
+	}
+	blc.lastCheckTime = time.Now()
 
 	// Unmarshal response.
 	var announcements BinanceAnnouncements
@@ -128,6 +138,9 @@ func (blc *BinanceAnnouncementsChecker) retrieveBinanceAnnouncements() (binanceA
 // changedListings checks whether new announcements have been published on Binance.
 func (blc *BinanceAnnouncementsChecker) binanceAnnouncementsCheck(oldAnnouncementsCodes *[]string) (newAnnouncementsCodes []string, newAnnouncements map[string]string) {
 	announcements := blc.retrieveBinanceAnnouncements()
+	if len(announcements) == 0 {
+		return nil, nil
+	}
 
 	// Check if new announcements have been published.
 	announcementsCodes := maps.Keys(announcements)
