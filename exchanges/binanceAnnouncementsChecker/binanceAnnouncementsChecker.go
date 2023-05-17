@@ -20,9 +20,9 @@ import (
 	"golang.org/x/time/rate"
 )
 
-// getBinanceAnnouncementsEndpoint returns the (unofficial) binance announcements endpoint.
+// GetBinanceAnnouncementsEndpoint returns the (unofficial) binance announcements endpoint.
 // NOTE: Retrieved from https://stackoverflow.com/a/69673063/8135687.
-func getBinanceAnnouncementsEndpoint() string {
+func GetBinanceAnnouncementsEndpoint() string {
 	queries := map[string]string{
 		"catalogId": "48",
 		"pageNo":    "1",
@@ -104,7 +104,7 @@ func (blc *BinanceAnnouncementsChecker) retrieveBinanceAnnouncements() (binanceA
 	defer fasthttp.ReleaseResponse(response)
 
 	// Make request.
-	request.SetRequestURI(getBinanceAnnouncementsEndpoint())
+	request.SetRequestURI(GetBinanceAnnouncementsEndpoint())
 	request.Header.SetMethod("GET")
 	request.Header.Set("Content-Type", "application/json")
 	err := fasthttp.Do(request, response)

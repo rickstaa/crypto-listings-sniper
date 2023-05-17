@@ -55,6 +55,7 @@ func main() {
 	binanceClient := binance.NewClient(envVars.BinanceKey, envVars.BinanceSecret)
 	binanceClient.SetApiEndpoint("https://api4.binance.com")
 	log.Printf("Binance API endpoint: %s", binanceClient.BaseURL)
+	log.Printf("Binance announcement API endpoint: %s", binanceAnnouncementsChecker.GetBinanceAnnouncementsEndpoint())
 
 	// Initialize crypto checkers.
 	binanceListingsChecker := binanceListingsChecker.NewBinanceListingsChecker(binanceClient, telegramBot, envVars.TelegramChatID, envVars.EnableTelegramMessage, discordBot, envVars.DiscordChannelIDs, envVars.EnableDiscordMessages)
