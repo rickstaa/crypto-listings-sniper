@@ -116,6 +116,7 @@ func (blc *BinanceAnnouncementsChecker) retrieveBinanceAnnouncements() (binanceA
 			log.Printf("WARNING: Announcement API endpoint not responding.")
 			blc.lastCheckTime = time.Now()
 		}
+
 		return binanceAnnouncements
 	}
 	blc.lastCheckTime = time.Now()
