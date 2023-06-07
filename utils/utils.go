@@ -194,7 +194,6 @@ func RetrieveOldAnnouncements() (oldAnnouncements []string) {
 		if err != nil {
 			log.Fatalf("Error unmarshalling old announcements: %v", err)
 		}
-		log.Printf("Number of old announcements: %d", len(oldAnnouncements))
 	}
 
 	return oldAnnouncements

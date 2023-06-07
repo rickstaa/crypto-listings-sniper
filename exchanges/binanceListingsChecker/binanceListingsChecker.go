@@ -92,6 +92,7 @@ func (blc *BinanceListingsChecker) retrieveSymbolInfo(symbol string) (assetInfo 
 		}
 
 		assetInfo = exchangeInfoTmp.Symbols[0]
+		break
 	}
 
 	return assetInfo
@@ -116,6 +117,13 @@ func (blc *BinanceListingsChecker) changedListings(oldAssets *[]string) (removed
 func (blc *BinanceListingsChecker) postMessages(removed bool, changedAssets []string, oldAssets []string) {
 	for _, asset := range changedAssets {
 		assetInfo := blc.retrieveSymbolInfo(asset)
+
+		// Log new listing or de-listing.
+		if removed {
+			log.Printf("De-listing found: %v", asset)
+		} else {
+			log.Printf("New listing found: %v", asset)
+		}
 
 		// Post telegram and discord messages.
 		go messaging.SendAssetMessage(blc.TelegramBot, blc.TelegramChatID, blc.EnableTelegramMessage, blc.DiscordBot, blc.DiscordChannelIDs, blc.EnableDiscordMessages, removed, asset, assetInfo)

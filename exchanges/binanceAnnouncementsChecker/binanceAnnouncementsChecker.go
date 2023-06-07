@@ -177,6 +177,9 @@ func (blc *BinanceAnnouncementsChecker) Start(maxRate float64) {
 
 		// Post messages.
 		for _, announcementCode := range newAnnouncementsCodes {
+			// Log announcement.
+			log.Printf("New Binance announcement: %s", newAnnouncements[announcementCode])
+
 			// Post telegram and discord messages.
 			go messaging.SendAnnouncementMessage(blc.telegramBot, blc.telegramChatID, blc.enableTelegramMessage, blc.discordBot, blc.discordChannelIDs, blc.enableDiscordMessages, announcementCode, newAnnouncements[announcementCode])
 
