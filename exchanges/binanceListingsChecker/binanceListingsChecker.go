@@ -17,46 +17,48 @@ import (
 
 // BinanceListingsChecker is a class that when started checks Binance for new listings or de-listings and posts a message in set message channels
 type BinanceListingsChecker struct {
-	BinanceClient           *binance.Client
-	TelegramBot             *telego.Bot
-	TelegramChatID          int64
-	EnableTelegramMessage   bool
-	DiscordBot              *discordgo.Session
-	DiscordChannelIDs       []string
-	EnableDiscordMessages   bool
-	OldAssets               *[]string
-	maxRate                 float64
-	lastAssetsCheckTime     time.Time
-	lastSymbolInfoCheckTime time.Time
+	BinanceClient             *binance.Client
+	TelegramBot               *telego.Bot
+	TelegramChatID            int64
+	EnableTelegramMessage     bool
+	DiscordBot                *discordgo.Session
+	DiscordChannelIDs         []string
+	EnableDiscordMessages     bool
+	OldAssets                 *[]string
+	maxRate                   float64
+	lastAssetsWarningTime     time.Time
+	lastSymbolInfoWarningTime time.Time
 }
 
 // NewBinanceListingsChecker creates a new BinanceListingsChecker.
 func NewBinanceListingsChecker(binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) *BinanceListingsChecker {
 	return &BinanceListingsChecker{
-		BinanceClient:         binanceClient,
-		TelegramBot:           telegramBot,
-		TelegramChatID:        telegramChatID,
-		EnableTelegramMessage: enableTelegramMessage,
-		DiscordBot:            discordBot,
-		DiscordChannelIDs:     discordChannelIDs,
-		EnableDiscordMessages: enableDiscordMessages,
+		BinanceClient:             binanceClient,
+		TelegramBot:               telegramBot,
+		TelegramChatID:            telegramChatID,
+		EnableTelegramMessage:     enableTelegramMessage,
+		DiscordBot:                discordBot,
+		DiscordChannelIDs:         discordChannelIDs,
+		EnableDiscordMessages:     enableDiscordMessages,
+		lastAssetsWarningTime:     time.Now(),
+		lastSymbolInfoWarningTime: time.Now(),
 	}
 }
 
 // retrieveBinanceAssets retrieves a list with the available assets from Binance.
 // NOTE: Retry if failed and throw warning every minute.
 func (blc *BinanceListingsChecker) retrieveBinanceAssets() (assets []string) {
-	blc.lastAssetsCheckTime = time.Now()
-
 	// Retrieve listing prices from Binance.
 	priceService := blc.BinanceClient.NewListPricesService()
 	listingPrices, err := priceService.Do(context.Background())
 	assets = make([]string, len(listingPrices))
 
 	// Log warning if failed.
-	if time.Since(blc.lastAssetsCheckTime) > time.Minute { // Only log every minute.
-		log.Printf("WARNING: Error retrieving Binance listing prices: %v", err)
-		blc.lastAssetsCheckTime = time.Now()
+	if err != nil {
+		if time.Since(blc.lastAssetsWarningTime) > time.Minute { // Only log every minute.
+			log.Printf("WARNING: Error retrieving Binance listing prices: %v", err)
+			blc.lastAssetsWarningTime = time.Now()
+		}
 	}
 
 	// Return assets.
@@ -82,9 +84,9 @@ func (blc *BinanceListingsChecker) retrieveSymbolInfo(symbol string) (assetInfo 
 		// Retry if symbol was not found (i.e. error -1121).
 		if err != nil {
 			if err.(*common.APIError).Code == -1121 {
-				if time.Since(blc.lastSymbolInfoCheckTime) > 10*time.Second { // Only log every 10 seconds.
+				if time.Since(blc.lastSymbolInfoWarningTime) > 10*time.Second { // Only log every 10 seconds.
 					log.Printf("Warning: Error retrieving Binance symbol info: %v", err)
-					blc.lastSymbolInfoCheckTime = time.Now()
+					blc.lastSymbolInfoWarningTime = time.Now()
 				}
 				continue
 			}

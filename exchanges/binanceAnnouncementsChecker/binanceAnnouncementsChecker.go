@@ -73,26 +73,27 @@ type BinanceArticle struct {
 
 // BinanceAnnouncementsChecker is a class that when started checks Binance for new announcements and posts a message in set message channels
 type BinanceAnnouncementsChecker struct {
-	binanceClient         *binance.Client
-	telegramBot           *telego.Bot
-	telegramChatID        int64
-	enableTelegramMessage bool
-	discordBot            *discordgo.Session
-	discordChannelIDs     []string
-	enableDiscordMessages bool
-	lastCheckTime         time.Time
+	binanceClient               *binance.Client
+	telegramBot                 *telego.Bot
+	telegramChatID              int64
+	enableTelegramMessage       bool
+	discordBot                  *discordgo.Session
+	discordChannelIDs           []string
+	enableDiscordMessages       bool
+	lastAnnouncementWarningTime time.Time
 }
 
 // newBinanceAnnouncementsChecker creates a new BinanceAnnouncementsChecker.
 func NewBinanceAnnouncementsChecker(binanceClient *binance.Client, telegramBot *telego.Bot, telegramChatID int64, enableTelegramMessage bool, discordBot *discordgo.Session, discordChannelIDs []string, enableDiscordMessages bool) *BinanceAnnouncementsChecker {
 	return &BinanceAnnouncementsChecker{
-		binanceClient:         binanceClient,
-		telegramBot:           telegramBot,
-		telegramChatID:        telegramChatID,
-		enableTelegramMessage: enableTelegramMessage,
-		discordBot:            discordBot,
-		discordChannelIDs:     discordChannelIDs,
-		enableDiscordMessages: enableDiscordMessages,
+		binanceClient:               binanceClient,
+		telegramBot:                 telegramBot,
+		telegramChatID:              telegramChatID,
+		enableTelegramMessage:       enableTelegramMessage,
+		discordBot:                  discordBot,
+		discordChannelIDs:           discordChannelIDs,
+		enableDiscordMessages:       enableDiscordMessages,
+		lastAnnouncementWarningTime: time.Now(),
 	}
 }
 
@@ -112,14 +113,13 @@ func (blc *BinanceAnnouncementsChecker) retrieveBinanceAnnouncements() (binanceA
 		log.Fatalf("Error scraping binance announcements endpoint: %v", err)
 	}
 	if response.StatusCode() != 200 {
-		if time.Since(blc.lastCheckTime) > time.Minute { // Only log every minute.
+		if time.Since(blc.lastAnnouncementWarningTime) > time.Minute { // Only log every minute.
 			log.Printf("WARNING: Announcement API endpoint not responding.")
-			blc.lastCheckTime = time.Now()
+			blc.lastAnnouncementWarningTime = time.Now()
 		}
 
 		return binanceAnnouncements
 	}
-	blc.lastCheckTime = time.Now()
 
 	// Unmarshal response.
 	var announcements BinanceAnnouncements
