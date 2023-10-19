@@ -1,6 +1,6 @@
 # Crypto Listing Sniper
 
-> [!IMPORTANT]\
+> [!WARNING]\
 > Due to recent changes in local regulations, [Binance has left the Dutch market](https://www.binance.com/en/support/announcement/notice-on-changes-of-services-in-the-netherlands-b5a647be31cf469b87fc3337fd461ced), impacting my ability to utilize the Binance API. Regrettably, this means I can no longer sustain this project. If you want to take over this project, please contact me 💪🏼!
 
 A small bot that watches exchanges for new coin/token listings and, in less than `0.3` seconds, posts a Telegram/Discord message. ~~You can join [this telegram group](https://t.me/crypto_listings_sniper) to see it in action~~.
