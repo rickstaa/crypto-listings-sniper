@@ -27,7 +27,7 @@ This bot currently supports the following exchanges:
 3. Install the Golang dependencies using `go get`.
 4. Build the bot using `go build`
 5. Rename the `.env.template` file to `.env` and insert the required environmental variables.
-6. Run the bot using `go run crypto-listings-sniper`.
+6. Run the bot using `./crypto-listings-sniper`.
 
 ## Contributing
 
